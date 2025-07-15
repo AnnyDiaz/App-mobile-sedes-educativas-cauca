@@ -2,6 +2,25 @@ from sqlalchemy import Column, Integer, Float, String, Text, ForeignKey, Date, T
 from .database import Base
 from sqlalchemy.orm import relationship
 from datetime import date
+from sqlalchemy import Column, Integer, String
+from .database import Base
+
+
+
+
+class Usuario(Base):
+    __tablename__ = "usuarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, nullable=False)
+    correo = Column(String, unique=True, index=True, nullable=False)
+    contrasena = Column(String, nullable=False)
+
+    rol_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
+    rol = relationship("Rol", back_populates="usuarios")
+
+    visitas = relationship("Visita", back_populates="usuario")
+
 
 class SedeEducativa(Base):
     __tablename__ = "sedes_educativas"
@@ -35,6 +54,17 @@ class Visita(Base):
     observaciones = Column(Text, nullable=True)
     prioridad = Column(String, nullable=True)
     hora = Column(Time, nullable=True)
-
-
+    estado = Column(String, default="pendiente")
+    usuario_id = Column(Integer, ForeignKey("usuarios.id")) 
+    usuario = relationship("Usuario", back_populates="visitas") 
     sede = relationship("SedeEducativa")
+
+
+class Rol(Base):
+    __tablename__ = "roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, unique=True, nullable=False)
+
+    usuarios = relationship("Usuario", back_populates="rol")
+
