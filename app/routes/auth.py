@@ -1,25 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from fastapi.security import OAuth2PasswordBearer
 from app import models, schemas
 from app.database import get_db
 
 router = APIRouter()
 
-# Configuración JWT
+# Configuración JWT y seguridad
 SECRET_KEY = "clave-secreta"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 bearer_scheme = HTTPBearer()
-# Encriptación
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # --------------------------
 # REGISTRO
@@ -61,8 +56,9 @@ def register(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
         "usuario": usuario_out
     }
 
+# --------------------------
 # LOGIN
-
+# --------------------------
 @router.post("/login")
 def login(user: schemas.Login, db: Session = Depends(get_db)):
     usuario = db.query(models.Usuario).filter(models.Usuario.correo == user.correo).first()
@@ -93,22 +89,15 @@ def login(user: schemas.Login, db: Session = Depends(get_db)):
 # --------------------------
 # OBTENER USUARIO ACTUAL
 # --------------------------
-
-SECRET_KEY = "clave-secreta"
-ALGORITHM = "HS256"
-
-bearer_scheme = HTTPBearer()
-
 def obtener_usuario_actual(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db)
 ):
-    token = credentials.credentials  # ✅ extrae el token del header
+    token = credentials.credentials
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         correo = payload.get("sub")
-        rol = payload.get("rol")
         if correo is None:
             raise HTTPException(status_code=401, detail="Token inválido")
     except JWTError:
@@ -120,12 +109,12 @@ def obtener_usuario_actual(
 
     return usuario
 
-SECRET_KEY = "clave-secreta"
-ALGORITHM = "HS256"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
+# --------------------------
+# VERIFICAR ROL PERMITIDO
+# --------------------------
 def verificar_rol_permitido(roles_permitidos: list):
-    def validador(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    def validador(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme), db: Session = Depends(get_db)):
+        token = credentials.credentials
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             correo = payload.get("sub")
@@ -141,47 +130,34 @@ def verificar_rol_permitido(roles_permitidos: list):
         if usuario is None:
             raise HTTPException(status_code=401, detail="Usuario no encontrado")
 
-        return usuario  # Devuelve el usuario autenticado si el rol es válido
-    return validador
-
-def verificar_rol_permitido(roles_permitidos: list):
-    def validador(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-        ...
         return usuario
     return validador
 
-
-# --------------------------cambiar contraseña
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+# --------------------------
+# CAMBIAR CONTRASEÑA
+# --------------------------
 @router.put("/cambiar-contrasena")
 def cambiar_contrasena(
     datos: schemas.CambioContrasena,
     db: Session = Depends(get_db),
     usuario: models.Usuario = Depends(obtener_usuario_actual)
 ):
-    # Verificar contraseña actual
     if not pwd_context.verify(datos.actual, usuario.contrasena):
         raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
 
-    # Cifrar y guardar nueva contraseña
     usuario.contrasena = pwd_context.hash(datos.nueva)
     db.commit()
     return {"mensaje": "Contraseña actualizada correctamente"}
 
-
-
-# --------------------------recuperar contraseña
-SECRET_KEY = "clave-secreta"
-ALGORITHM = "HS256"
-
+# --------------------------
+# RECUPERAR CONTRASEÑA
+# --------------------------
 @router.post("/recuperar")
 def recuperar_contrasena(datos: schemas.RecuperarContrasena, db: Session = Depends(get_db)):
     usuario = db.query(models.Usuario).filter(models.Usuario.correo == datos.correo).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Correo no encontrado")
 
-    # Crear token temporal (válido por 15 minutos)
     expiration = datetime.utcnow() + timedelta(minutes=15)
     token_data = {
         "sub": usuario.correo,
@@ -190,17 +166,16 @@ def recuperar_contrasena(datos: schemas.RecuperarContrasena, db: Session = Depen
     }
     token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
 
-    # En un sistema real: aquí enviarías el token por correo
     print(f"Token de recuperación para {usuario.correo}: {token}")
 
     return {
         "mensaje": "Se ha generado un token de recuperación. Revise su correo (simulado).",
-        "token": token  # Puedes quitar esto en producción
+        "token": token
     }
 
-
-# --------------------------restablecer contraseña
-
+# --------------------------
+# RESTABLECER CONTRASEÑA
+# --------------------------
 @router.post("/restablecer-contrasena")
 def restablecer_contrasena(datos: schemas.RestablecerContrasena, db: Session = Depends(get_db)):
     try:
