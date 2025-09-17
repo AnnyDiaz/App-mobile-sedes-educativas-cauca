@@ -1,0 +1,22 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_230508",
+    "titulo": "🧪 Prueba: Solo visitadores",
+    "mensaje": "Esta es una notificación de prueba enviada a: Solo visitadores",
+    "tipo": "info",
+    "categoria": "alertas_sistema",
+    "fecha_creacion": "2025-08-19T23:05:08.103161",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 0,
+    "fallidas": 0,
+    "canales_usados": [],
+    "destinatarios": []
+  },
+  "timestamp": "2025-08-19T23:05:08.103371"
+}

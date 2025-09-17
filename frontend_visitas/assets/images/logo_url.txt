@@ -1,0 +1,9 @@
+URL oficial del logo de la Gobernación del Cauca:
+https://www.cauca.gov.co/SiteAssets/GobernacionCauca/assets/img/ImgGobCauca/inconosGobernacionHD/Logos-Gobernaci%C3%B3n-del-Cauca-horizontal.png
+
+Instrucciones:
+1. Abre el enlace en tu navegador
+2. Haz clic derecho en la imagen
+3. Selecciona "Guardar imagen como..."
+4. Guárdala como "logo_cauca_oficial.png" en esta carpeta
+5. Reemplaza el archivo logo_cauca.png existente con el nuevo

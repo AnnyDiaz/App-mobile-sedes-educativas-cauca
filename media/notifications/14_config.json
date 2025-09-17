@@ -1,0 +1,32 @@
+{
+  "visitas_vencidas": {
+    "enabled": true,
+    "tipo": "push"
+  },
+  "nuevas_asignaciones": {
+    "enabled": true,
+    "tipo": "push"
+  },
+  "recordatorios": {
+    "enabled": true,
+    "tipo": "push"
+  },
+  "alertas_sistema": {
+    "enabled": true,
+    "tipo": "push"
+  },
+  "reportes_listos": {
+    "enabled": true,
+    "tipo": "push"
+  },
+  "cambios_programacion": {
+    "enabled": true,
+    "tipo": "push"
+  },
+  "horario_silencio": {
+    "inicio": "22:00",
+    "fin": "08:00"
+  },
+  "push_token": null,
+  "email_notifications": "admin@test.com"
+}

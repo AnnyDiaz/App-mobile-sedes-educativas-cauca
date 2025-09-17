@@ -1,0 +1,158 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_145555",
+    "titulo": "📊 Reporte Mensual Disponible",
+    "mensaje": "Tu reporte mensual de actividades ha sido generado exitosamente. Incluye estadísticas detalladas de visitadores, cumplimiento de metas y análisis de rendimiento por municipio. Puedes descargarlo desde el panel de exportaciones.",
+    "tipo": "success",
+    "categoria": "reportes_listos",
+    "fecha_creacion": "2025-08-19T14:55:55.781271",
+    "creado_por": 14,
+    "canales": [
+      "email",
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 14,
+    "fallidas": 0,
+    "canales_usados": [
+      "push",
+      "email"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 3,
+        "nombre": "anny",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 4,
+        "nombre": "anny",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 5,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 6,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 7,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 8,
+        "nombre": "deyby",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 9,
+        "nombre": "Usuario Test",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 10,
+        "nombre": "supervisor test",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 12,
+        "nombre": "lina",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 13,
+        "nombre": "prueba clave",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 14,
+        "nombre": "Admin Test",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 15,
+        "nombre": "Usuario Test",
+        "canales_enviados": [
+          "email",
+          "push"
+        ],
+        "errores": []
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T14:55:55.865609"
+}

@@ -1,0 +1,49 @@
+{
+  "notificacion": {
+    "id": "notif_20250820_170815",
+    "titulo": "📊 Reporte Disponible",
+    "mensaje": "Tu reporte mensual está listo para revisar y descargar.",
+    "tipo": "info",
+    "categoria": "recordatorios",
+    "fecha_creacion": "2025-08-20T17:08:15.600393",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 1,
+    "fallidas": 2,
+    "canales_usados": [
+      "push"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 5,
+        "nombre": "daniel",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      }
+    ]
+  },
+  "timestamp": "2025-08-20T17:08:15.635075"
+}
