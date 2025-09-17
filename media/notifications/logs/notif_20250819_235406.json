@@ -1,0 +1,41 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_235406",
+    "titulo": " Reporte Disponible",
+    "mensaje": "Tu reporte mensual está listo para revisar y descargar. prueba",
+    "tipo": "info",
+    "categoria": "recordatorios",
+    "fecha_creacion": "2025-08-19T23:54:06.227654",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 2,
+    "fallidas": 0,
+    "canales_usados": [
+      "push"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T23:54:06.237836"
+}

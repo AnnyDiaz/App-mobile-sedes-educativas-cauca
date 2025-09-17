@@ -1,0 +1,33 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_143826",
+    "titulo": "📊 Reporte Listo para Descarga",
+    "mensaje": "Tu exportación de datos ha sido procesada y está lista para descargar.",
+    "tipo": "success",
+    "categoria": "reportes_listos",
+    "fecha_creacion": "2025-08-19T14:38:26.324711",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 1,
+    "fallidas": 0,
+    "canales_usados": [
+      "push"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 14,
+        "nombre": "Admin Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T14:38:26.325422"
+}

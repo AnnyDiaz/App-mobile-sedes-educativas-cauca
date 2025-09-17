@@ -1,0 +1,137 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_233702",
+    "titulo": "⚠️ Visitas Vencidas",
+    "mensaje": "Hay visitas programadas que requieren atención inmediata.",
+    "tipo": "info",
+    "categoria": "alertas_sistema",
+    "fecha_creacion": "2025-08-19T23:37:02.702832",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 14,
+    "fallidas": 0,
+    "canales_usados": [
+      "push"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 5,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 6,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 7,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 8,
+        "nombre": "deyby",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 9,
+        "nombre": "Usuario Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 10,
+        "nombre": "supervisor test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 12,
+        "nombre": "lina",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 13,
+        "nombre": "prueba clave",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 14,
+        "nombre": "Admin Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 15,
+        "nombre": "Usuario Test (Actualizado)",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 3,
+        "nombre": "anny",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 4,
+        "nombre": "anny",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T23:37:02.704149"
+}

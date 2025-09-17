@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:frontend_visitas/config.dart';
+
+import '../config.dart';
+import '../utils/responsive_utils.dart';
 
 class VisitadorHome extends StatefulWidget {
   const VisitadorHome({super.key});
@@ -14,13 +16,23 @@ class VisitadorHome extends StatefulWidget {
 class _VisitadorHomeState extends State<VisitadorHome> {
   String nombre = "";
   Map<String, dynamic>? visitaReciente;
-  bool loading = true;
 
   @override
   void initState() {
     super.initState();
+    verificarAutenticacion();
     cargarDatosUsuario();
     cargarUltimaVisita();
+  }
+
+  Future<void> verificarAutenticacion() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) {
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/auth');
+      }
+    }
   }
 
   Future<void> cargarDatosUsuario() async {
@@ -31,41 +43,48 @@ class _VisitadorHomeState extends State<VisitadorHome> {
   }
 
   Future<void> cargarUltimaVisita() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-      if (token == null) {
-        setState(() => loading = false);
-        return;
+    if (token == null) {
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/auth');
       }
+      return;
+    }
 
+    try {
       final response = await http.get(
-        Uri.parse('$baseUrl/visitas/mis-visitas'),
+        Uri.parse('$baseUrl/api/visitas-asignadas/mis-visitas'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-      ).timeout(const Duration(seconds: 30));
+      );
 
       if (response.statusCode == 200) {
         final visitas = jsonDecode(response.body);
-        if (visitas.isNotEmpty) {
-          setState(() {
-            visitaReciente = visitas.last;
-          });
+        if (visitas is List && visitas.isNotEmpty) {
+          final ultimaVisita = visitas.last;
+          // Verificar que la visita tenga los campos necesarios
+          if (ultimaVisita != null && 
+              ultimaVisita is Map<String, dynamic> &&
+              ultimaVisita['sede'] != null &&
+              ultimaVisita['sede'] is Map<String, dynamic>) {
+            setState(() {
+              visitaReciente = ultimaVisita;
+            });
+          }
+        }
+      } else if (response.statusCode == 401) {
+        // Token expirado o inválido
+        await prefs.clear();
+        if (context.mounted) {
+          Navigator.pushReplacementNamed(context, '/auth');
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => loading = false);
-      }
+      debugPrint('Error al cargar última visita: $e');
     }
   }
 
@@ -76,19 +95,33 @@ class _VisitadorHomeState extends State<VisitadorHome> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         elevation: 4,
         child: Container(
-          width: 150,
-          height: 140,
-          padding: const EdgeInsets.all(16),
+          width: ResponsiveUtils.screenWidth(context) * 0.4,
+          height: ResponsiveUtils.getCardHeight(context),
+          padding: ResponsiveUtils.getResponsivePadding(context),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 36, color: Colors.black),
-              const SizedBox(height: 10),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 5),
-              Text(subtitle, 
-                  textAlign: TextAlign.center, 
-                  style: const TextStyle(fontSize: 12)),
+              Icon(icon, size: ResponsiveUtils.getIconSize(context), color: Colors.black),
+              SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context)),
+              Text(
+                title, 
+                style: TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14)
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context) * 0.5),
+              Text(
+                subtitle, 
+                textAlign: TextAlign.center, 
+                style: TextStyle(fontSize: ResponsiveUtils.getResponsiveFontSize(context, 10)),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -99,85 +132,137 @@ class _VisitadorHomeState extends State<VisitadorHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Principal"),
-        backgroundColor: const Color(0xFF008BE8),
+             appBar: AppBar(
+         title: Text(
+           "Principal",
+           style: TextStyle(
+             fontSize: ResponsiveUtils.getResponsiveFontSize(context, 20),
+             fontWeight: FontWeight.w600,
+           ),
+         ),
+         backgroundColor: const Color(0xFF008BE8),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar sesión',
+                     IconButton(
+             icon: Icon(
+               Icons.logout,
+               size: ResponsiveUtils.getIconSize(context),
+             ),
             onPressed: () async {
               final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('token');
-              await prefs.remove('nombre');
-              if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context, 
-                  '/login', 
-                  (route) => false
-                );
+              await prefs.clear();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/auth');
               }
             },
           ),
         ],
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text("Bienvenido, $nombre", 
-                        style: const TextStyle(fontSize: 18)),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _buildCard(
-                        "Iniciar nueva visita", 
-                        "Comienza un nuevo registro de visita", 
-                        Icons.add, 
-                        () => Navigator.pushNamed(context, '/crear-visita')),
-                      const SizedBox(width: 10),
-                      _buildCard(
-                        "Mis visitas pendientes", 
-                        "Accede a visitas guardadas", 
-                        Icons.assignment_late, 
-                        () => Navigator.pushNamed(context, '/pendientes')),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _buildCard(
-                        "Historial de visitas", 
-                        "Revisa tus visitas completadas", 
-                        Icons.history, 
-                        () => Navigator.pushNamed(context, '/historial')),
-                      const SizedBox(width: 10),
-                      _buildCard(
-                        "Mi perfil", 
-                        "Gestiona tu información", 
-                        Icons.settings, 
-                        () => Navigator.pushNamed(context, '/perfil')),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  if (visitaReciente != null) ...[
-                    const Divider(),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Actividad reciente\nVisita iniciada: ${visitaReciente!['sede']['nombre']}\n${visitaReciente!['fecha']}",
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    )
-                  ]
-                ],
-              ),
+      body: SingleChildScrollView(
+        padding: ResponsiveUtils.getResponsivePadding(context),
+        child: Column(
+          children: [
+                         Align(
+               alignment: Alignment.centerLeft,
+               child: Text(
+                 "Bienvenido, $nombre", 
+                 style: TextStyle(
+                   fontSize: ResponsiveUtils.getResponsiveFontSize(context, 18),
+                   fontWeight: FontWeight.bold,
+                 ),
+               ),
+             ),
+             SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context) * 2.5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildCard("Iniciar nueva visita", "Comienza un nuevo registro de visita", Icons.add, () {
+                  Navigator.pushNamed(context, '/crear-visita');
+                }),
+                _buildCard("Mis visitas pendientes", "Accede a visitas guardadas", Icons.assignment_late, () {
+                  Navigator.pushNamed(context, '/visitas_pendientes');
+                }),
+              ],
             ),
+                         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildCard("Historial de visitas", "Revisa tus visitas completadas", Icons.history, () {
+                  Navigator.pushNamed(context, '/visitas_completas');
+                }),
+                _buildCard("Mi perfil", "Gestiona tu información", Icons.settings, () {
+                  Navigator.pushNamed(context, '/perfil');
+                }),
+              ],
+            ),
+                         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context) * 2.5),
+            if (visitaReciente != null && 
+                visitaReciente!['sede'] != null &&
+                visitaReciente!['sede'] is Map<String, dynamic>) ...[
+              const Divider(),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getResponsiveSpacing(context)),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Actividad reciente",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                        ),
+                      ),
+                      SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context) * 0.5),
+                      Text(
+                        "Visita iniciada: ${visitaReciente!['sede']?['nombre'] ?? 'Sede no especificada'}",
+                        style: TextStyle(fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        "Fecha: ${visitaReciente!['fecha'] ?? 'Fecha no especificada'}",
+                        style: TextStyle(fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else ...[
+              const Divider(),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getResponsiveSpacing(context)),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Actividad reciente",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                        ),
+                      ),
+                      SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context) * 0.5),
+                      Text(
+                        "No hay visitas recientes",
+                        style: TextStyle(
+                          fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14),
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

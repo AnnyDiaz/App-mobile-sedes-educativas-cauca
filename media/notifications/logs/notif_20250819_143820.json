@@ -1,0 +1,160 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_143820",
+    "titulo": "⚠️ Visitas Vencidas",
+    "mensaje": "Hay 5 visitas programadas que están vencidas y requieren atención inmediata.",
+    "tipo": "warning",
+    "categoria": "visitas_vencidas",
+    "fecha_creacion": "2025-08-19T14:38:20.107308",
+    "creado_por": 14,
+    "canales": [
+      "push",
+      "email"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 13,
+    "fallidas": 1,
+    "canales_usados": [
+      "push",
+      "email"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible",
+          "Email no configurado"
+        ]
+      },
+      {
+        "user_id": 3,
+        "nombre": "anny",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 4,
+        "nombre": "anny",
+        "canales_enviados": [
+          "push",
+          "email"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 5,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": [
+          "Email no configurado"
+        ]
+      },
+      {
+        "user_id": 6,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push",
+          "email"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 7,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push",
+          "email"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 8,
+        "nombre": "deyby",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": [
+          "Email no configurado"
+        ]
+      },
+      {
+        "user_id": 9,
+        "nombre": "Usuario Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": [
+          "Email no configurado"
+        ]
+      },
+      {
+        "user_id": 10,
+        "nombre": "supervisor test",
+        "canales_enviados": [
+          "push",
+          "email"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 12,
+        "nombre": "lina",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": [
+          "Email no configurado"
+        ]
+      },
+      {
+        "user_id": 13,
+        "nombre": "prueba clave",
+        "canales_enviados": [
+          "push",
+          "email"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": [
+          "Email no configurado"
+        ]
+      },
+      {
+        "user_id": 14,
+        "nombre": "Admin Test",
+        "canales_enviados": [
+          "push",
+          "email"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 15,
+        "nombre": "Usuario Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": [
+          "Email no configurado"
+        ]
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T14:38:20.108385"
+}

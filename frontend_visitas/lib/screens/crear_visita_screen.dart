@@ -6,8 +6,8 @@ class CrearVisitaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Crear Visita")),
-      body: const Center(child: Text("Formulario para crear una visita")),
+      appBar: AppBar(title: const Text('Crear Visita')),
+      body: const Center(child: Text('Pantalla para crear visita')),
     );
   }
 }

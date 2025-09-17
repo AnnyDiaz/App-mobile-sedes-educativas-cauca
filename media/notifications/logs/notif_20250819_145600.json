@@ -1,0 +1,41 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_145600",
+    "titulo": "📅 Recordatorio: Capacitación PAE Mañana",
+    "mensaje": "Te recordamos que mañana a las 9:00 AM se realizará la capacitación sobre el nuevo protocolo PAE. La reunión será en el auditorio principal. Por favor confirma tu asistencia respondiendo a este mensaje.",
+    "tipo": "info",
+    "categoria": "recordatorios",
+    "fecha_creacion": "2025-08-19T14:56:00.192878",
+    "creado_por": 14,
+    "canales": [
+      "email"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 2,
+    "fallidas": 0,
+    "canales_usados": [
+      "email"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 3,
+        "nombre": "anny",
+        "canales_enviados": [
+          "email"
+        ],
+        "errores": []
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T14:56:00.199531"
+}

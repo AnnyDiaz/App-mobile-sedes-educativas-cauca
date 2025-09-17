@@ -1,0 +1,67 @@
+# ========================================
+# CONFIGURACIÓN DE LA APLICACIÓN VISITAS PAE
+# ========================================
+# Copia este archivo como .env y configura tus valores
+
+# ========================================
+# BASE DE DATOS
+# ========================================
+DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/visitas_cauca
+
+# ========================================
+# AUTENTICACIÓN JWT - SEGURIDAD CRÍTICA
+# ========================================
+SECRET_KEY=048e24fe4ef19d374cebef888a4d5f2005aafafacd173ccac706f9db5d05d49e108f565497664be1a07e842c06b28f1ecc2791d578ebde1f96c0027a41eadaa2
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# ========================================
+# CONFIGURACIÓN DE EMAIL (OPCIONAL)
+# ========================================
+# Para recuperación de contraseñas
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_email@gmail.com
+SMTP_PASSWORD=tu_contraseña_de_aplicacion
+SMTP_TLS=true
+
+# ========================================
+# CONFIGURACIÓN DE FIREBASE (OPCIONAL)
+# ========================================
+# Para notificaciones push
+FIREBASE_CREDENTIALS_PATH=path/to/firebase-credentials.json
+
+# ========================================
+# CONFIGURACIÓN DEL SERVIDOR
+# ========================================
+HOST=0.0.0.0
+PORT=8000
+DEBUG=true
+
+# ========================================
+# CONFIGURACIÓN DE CORS - SEGURIDAD
+# ========================================
+ALLOWED_ORIGINS=["http://localhost:3000", "http://localhost:8080", "http://192.168.1.83:3000"]
+
+# ========================================
+# CONFIGURACIÓN DE LOGGING
+# ========================================
+LOG_LEVEL=INFO
+LOG_FILE=app.log
+
+# ========================================
+# CONFIGURACIÓN DE ARCHIVOS
+# ========================================
+MAX_FILE_SIZE=10485760  # 10MB en bytes
+UPLOAD_DIR=./media
+ALLOWED_EXTENSIONS=["jpg", "jpeg", "png", "pdf", "doc", "docx"]
+
+# ========================================
+# CONFIGURACIÓN DE SEGURIDAD AVANZADA
+# ========================================
+BCRYPT_ROUNDS=12
+PASSWORD_MIN_LENGTH=8
+SESSION_TIMEOUT=900  # 15 minutos en segundos
+RATE_LIMIT_PER_MINUTE=60
+RATE_LIMIT_LOGIN_ATTEMPTS=5 

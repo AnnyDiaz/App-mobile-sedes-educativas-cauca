@@ -12,79 +12,89 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController(text: "test@test.com");
+  final TextEditingController passwordController = TextEditingController(text: "test123");
 
   bool _loading = false;
   String? _error;
 
   void _login() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  setState(() {
+    _loading = true;
+    _error = null;
+  });
 
-    final correo = emailController.text.trim();
-    final contrasena = passwordController.text.trim();
-    final url = Uri.parse('$baseUrl/login');
+  final correo = emailController.text.trim();
+  final contrasena = passwordController.text.trim();
+  final url = Uri.parse('$baseUrl/auth/login');
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'correo': correo,
-          'contrasena': contrasena,
-        }),
-      );
+  try {
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'correo': correo,
+        'contrasena': contrasena,
+      }),
+    );
 
-      setState(() {
-        _loading = false;
-      });
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final token = data['access_token'];
+      final usuario = data['usuario'];
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final token = data['access_token'];
-        final usuario = data['usuario'];
-        final rol = usuario['rol']; // ← Asegúrate de que esto llega del backend
+      // --- LA CORRECCIÓN MÁS IMPORTANTE ESTÁ AQUÍ ---
 
-        // Guardar token y rol en SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token); // ← USAR CLAVE UNIFICADA
-        await prefs.setString('rol', rol);
+      // 1. Extraemos el rol de forma segura y lo convertimos a minúsculas
+      final String rol = (usuario['rol']['nombre'] as String).toLowerCase();
 
-        print("✅ TOKEN JWT: $token");
-        print("👤 Usuario: ${usuario['nombre']}");
+      // 2. Imprimimos en la consola de depuración para estar 100% seguros
+      print('--- DEBUG DE REDIRECCIÓN ---');
+      print('Rol recibido y procesado: "$rol"');
+      print('Intentando navegar a la ruta correspondiente...');
+      print('-----------------------------');
 
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+      await prefs.setString('rol', rol);
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Inicio de sesión exitoso")),
         );
 
-        // Redirigir según el rol
-        if (rol == "admin") {
-          Navigator.pushReplacementNamed(context, '/admin_dashboard');
-        } else if (rol == "supervisor") {
-          Navigator.pushReplacementNamed(context, '/supervisor_dashboard');
-        } else if (rol == "visitador") {
-          Navigator.pushReplacementNamed(context, '/visitador');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("❌ Rol desconocido")),
-          );
+        // 3. Usamos la ruta correcta del main.dart
+        switch (rol) {
+          case "admin":
+            Navigator.pushReplacementNamed(context, '/admin_dashboard');
+            break;
+          case "supervisor":
+            Navigator.pushReplacementNamed(context, '/supervisor_dashboard');
+            break;
+          case "visitador":
+            // Esta es la ruta correcta para el dashboard principal del visitador
+            Navigator.pushReplacementNamed(context, '/visitador_dashboard');
+            break;
+          default:
+            // Si el rol no coincide, nos dará un error claro
+            setState(() {
+              _error = 'Rol de usuario desconocido: "$rol"';
+            });
         }
-      } else {
-        setState(() {
-          _error = 'Correo o contraseña inválidos';
-        });
       }
-    } catch (e) {
+    } else {
       setState(() {
-        _loading = false;
-        _error = 'Error de conexión con el servidor';
+        _error = 'Correo o contraseña inválidos';
       });
     }
+  } catch (e) {
+    setState(() {
+      _loading = false;
+      _error = 'Error procesando la respuesta: ${e.toString()}';
+    });
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
