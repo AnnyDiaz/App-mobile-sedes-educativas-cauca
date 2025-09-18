@@ -232,59 +232,47 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Filtra las visitas por contrato, operador, estado o fechas:',
+              'Busca visitas por contrato o operador (filtrado en tiempo real), o filtra por estado y fechas:',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 20),
             
-            // Filtro por Contrato
-            DropdownButtonFormField<String>(
-              value: _contratoFiltro,
+            // Buscador por Contrato
+            TextFormField(
               decoration: const InputDecoration(
-                labelText: 'Contrato',
+                labelText: 'Buscar por Contrato',
+                hintText: 'Escribe el nombre o número del contrato...',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.business),
+                prefixIcon: Icon(Icons.search),
+                suffixIcon: Icon(Icons.business),
               ),
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('Todos los contratos'),
-                ),
-                ..._contratos.map((contrato) => DropdownMenuItem<String>(
-                  value: contrato,
-                  child: Text(contrato),
-                )),
-              ],
+              initialValue: _contratoFiltro ?? '',
               onChanged: (value) {
                 setState(() {
-                  _contratoFiltro = value;
+                  _contratoFiltro = value.isEmpty ? null : value;
                 });
+                // Filtrado en tiempo real
+                _cargarVisitasCompletas();
               },
             ),
             const SizedBox(height: 16),
             
-            // Filtro por Operador
-            DropdownButtonFormField<String>(
-              value: _operadorFiltro,
+            // Buscador por Operador
+            TextFormField(
               decoration: const InputDecoration(
-                labelText: 'Operador',
+                labelText: 'Buscar por Operador',
+                hintText: 'Escribe el nombre del operador...',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
+                prefixIcon: Icon(Icons.search),
+                suffixIcon: Icon(Icons.person),
               ),
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('Todos los operadores'),
-                ),
-                ..._operadores.map((operador) => DropdownMenuItem<String>(
-                  value: operador,
-                  child: Text(operador),
-                )),
-              ],
+              initialValue: _operadorFiltro ?? '',
               onChanged: (value) {
                 setState(() {
-                  _operadorFiltro = value;
+                  _operadorFiltro = value.isEmpty ? null : value;
                 });
+                // Filtrado en tiempo real
+                _cargarVisitasCompletas();
               },
             ),
             const SizedBox(height: 16),
