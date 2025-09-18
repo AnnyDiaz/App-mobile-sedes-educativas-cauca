@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Código de Recuperación - Sistema PAE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #008BE8 0%, #0056b3 100%); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 5px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .content { padding: 40px 30px; background-color: #ffffff; }
+        .greeting { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 20px; }
+        .message { font-size: 16px; color: #555; margin-bottom: 30px; line-height: 1.8; }
+        .code-container { background: linear-gradient(135deg, #008BE8 0%, #0056b3 100%); color: white; padding: 25px; text-align: center; border-radius: 8px; margin: 30px 0; box-shadow: 0 4px 15px rgba(0, 139, 232, 0.3); }
+        .code { font-size: 32px; font-weight: bold; letter-spacing: 4px; margin: 10px 0; font-family: 'Courier New', monospace; }
+        .code-label { font-size: 14px; opacity: 0.9; margin-bottom: 10px; }
+        .important-section { background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 20px; margin: 25px 0; }
+        .important-title { font-weight: 600; color: #856404; margin-bottom: 15px; font-size: 16px; }
+        .important-list { list-style: none; padding: 0; }
+        .important-list li { color: #856404; margin-bottom: 8px; padding-left: 20px; position: relative; }
+        .important-list li:before { content: "⚠️"; position: absolute; left: 0; }
+        .footer { background-color: #2c3e50; color: white; padding: 25px 30px; text-align: center; font-size: 12px; line-height: 1.6; }
+        .footer p { opacity: 0.8; }
+        .timestamp { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin: 20px 0; text-align: center; font-size: 14px; color: #6c757d; }
+        @media only screen and (max-width: 600px) {
+            .email-container { margin: 10px; border-radius: 4px; }
+            .header { padding: 20px 15px; }
+            .header h1 { font-size: 20px; }
+            .content { padding: 25px 20px; }
+            .code { font-size: 28px; letter-spacing: 3px; }
+            .footer { padding: 20px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🔐 Sistema PAE</h1>
+            <p>Recuperación de Contraseña</p>
+        </div>
+        <div class="content">
+            <div class="greeting">Hola {{ username }},</div>
+            <div class="message">Has solicitado recuperar tu contraseña en el <strong>Sistema PAE</strong>. Para completar el proceso, utiliza el código de verificación que aparece a continuación.</div>
+            <div class="code-container">
+                <div class="code-label">Tu código de verificación es:</div>
+                <div class="code">{{ codigo }}</div>
+                <div class="code-label">Ingresa este código en la aplicación</div>
+            </div>
+            <div class="important-section">
+                <div class="important-title">📋 Información Importante:</div>
+                <ul class="important-list">
+                    <li>Este código expira en <strong>30 minutos</strong></li>
+                    <li>No compartas este código con nadie</li>
+                    <li>Si no solicitaste este código, ignora este email</li>
+                    <li>El código solo puede ser usado una vez</li>
+                </ul>
+            </div>
+            <div class="timestamp">📅 Fecha y hora de solicitud: {{ fecha }}</div>
+        </div>
+        <div class="footer">
+            <p><strong>Sistema PAE - Gestión de Visitas Educativas</strong><br>Este es un email automático del sistema. No respondas a este mensaje.<br>Si tienes problemas, contacta al administrador del sistema.</p>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,23 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_143824",
+    "titulo": "✅ Exportación Completada",
+    "mensaje": "Tu reporte mensual ha sido generado exitosamente y está listo para descarga.",
+    "tipo": "success",
+    "categoria": "reportes_listos",
+    "fecha_creacion": "2025-08-19T14:38:24.208982",
+    "creado_por": 14,
+    "canales": [
+      "push",
+      "email"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 0,
+    "fallidas": 0,
+    "canales_usados": [],
+    "destinatarios": []
+  },
+  "timestamp": "2025-08-19T14:38:24.209365"
+}

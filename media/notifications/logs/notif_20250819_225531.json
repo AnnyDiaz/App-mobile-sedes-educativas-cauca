@@ -1,0 +1,137 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_225531",
+    "titulo": "pruebaaa",
+    "mensaje": "pruebaa",
+    "tipo": "success",
+    "categoria": "cambios_programacion",
+    "fecha_creacion": "2025-08-19T22:55:31.485250",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 10,
+    "fallidas": 4,
+    "canales_usados": [
+      "push"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 5,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 6,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 7,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 8,
+        "nombre": "deyby",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 9,
+        "nombre": "Usuario Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 10,
+        "nombre": "supervisor test",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 12,
+        "nombre": "lina",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 13,
+        "nombre": "prueba clave",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 14,
+        "nombre": "Admin Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 15,
+        "nombre": "Usuario Test (Actualizado)",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 3,
+        "nombre": "anny",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 4,
+        "nombre": "anny",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T22:55:31.504716"
+}

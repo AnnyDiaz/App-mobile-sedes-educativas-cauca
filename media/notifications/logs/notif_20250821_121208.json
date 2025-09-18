@@ -1,0 +1,57 @@
+{
+  "notificacion": {
+    "id": "notif_20250821_121208",
+    "titulo": "⚠️ Visitas Vencidas",
+    "mensaje": "Hay visitas programadas que requieren atención inmediata.",
+    "tipo": "warning",
+    "categoria": "alertas_sistema",
+    "fecha_creacion": "2025-08-21T12:12:08.739212",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 3,
+    "fallidas": 1,
+    "canales_usados": [
+      "push"
+    ],
+    "destinatarios": [
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 5,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      },
+      {
+        "user_id": 6,
+        "nombre": "daniel",
+        "canales_enviados": [
+          "push"
+        ],
+        "errores": []
+      }
+    ]
+  },
+  "timestamp": "2025-08-21T12:12:08.863636"
+}

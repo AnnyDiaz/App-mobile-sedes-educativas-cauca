@@ -1,0 +1,39 @@
+{
+  "notificacion": {
+    "id": "notif_20250819_232920",
+    "titulo": "✅ Notificación Real 1755664158",
+    "mensaje": "Esta notificación debe aparecer en las alertas de los supervisores. Timestamp: 1755664158",
+    "tipo": "success",
+    "categoria": "alertas_sistema",
+    "fecha_creacion": "2025-08-19T23:29:20.933458",
+    "creado_por": 14,
+    "canales": [
+      "push"
+    ],
+    "estado": "enviada"
+  },
+  "resultados": {
+    "enviadas": 0,
+    "fallidas": 2,
+    "canales_usados": [],
+    "destinatarios": [
+      {
+        "user_id": 11,
+        "nombre": "Supervisor Test",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      },
+      {
+        "user_id": 2,
+        "nombre": "annny",
+        "canales_enviados": [],
+        "errores": [
+          "Push token no disponible"
+        ]
+      }
+    ]
+  },
+  "timestamp": "2025-08-19T23:29:20.933810"
+}

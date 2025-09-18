@@ -1,101 +1,100 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend_visitas/utils/responsive_utils.dart';
 
-class WelcomeScreen extends StatefulWidget {
+class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _verificarLogin();
-  }
-
-  void _verificarLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');  // ← nombre consistente con login
-    final rol = prefs.getString('rol');      // ← nombre consistente con login
-
-    if (token != null && rol != null) {
-      if (rol == "admin") {
-        Navigator.pushReplacementNamed(context, '/admin_dashboard');
-      } else if (rol == "supervisor") {
-        Navigator.pushReplacementNamed(context, '/supervisor_dashboard');
-      } else if (rol == "visitador") {
-        Navigator.pushReplacementNamed(context, '/visitador');
-      } else {
-        // Rol no reconocido, enviar al login
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            Image.asset(
-              'assets/images/logo_cauca.png',
-              width: 400,
-              height: 300,
-              fit: BoxFit.contain,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo Gobernación
+                Image.asset(
+                  'assets/images/logo.png',
+                  height: ResponsiveUtils.screenHeight(context) * 0.15,
+                  fit: BoxFit.contain,
+                ),
+
+                const SizedBox(height: 40),
+
+                // Título principal
+                Text(
+                  'SMC VS',
+                  style: TextStyle(
+                    fontSize: ResponsiveUtils.getResponsiveFontSize(context, 28),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 12),
+
+                // Subtítulo
+                
+
+                const SizedBox(height: 60),
+
+                // Botón iniciar sesión
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/auth');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A90E2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
                       ),
-                      child: const Text(
-                        'Iniciar sesión',
-                        style: TextStyle(fontSize: 16),
+                    ),
+                    child: Text(
+                      'Iniciar Sesion',
+                      style: TextStyle(
+                        fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/register');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade300,
-                        foregroundColor: Colors.black87,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Enlace de registro
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/auth');
+                  },
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: ResponsiveUtils.getResponsiveFontSize(context, 14),
+                        color: Colors.black87,
+                      ),
+                      children: [
+                        const TextSpan(text: "¿No tienes cuenta? "),
+                        TextSpan(
+                          text: 'Registrarse',
+                          style: const TextStyle(
+                            color: Color(0xFF4A90E2),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        'Registrarse',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Spacer(),
-          ],
+          ),
         ),
       ),
     );

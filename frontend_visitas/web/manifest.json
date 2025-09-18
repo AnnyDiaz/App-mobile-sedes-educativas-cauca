@@ -1,11 +1,11 @@
 {
-    "name": "frontend_visitas",
-    "short_name": "frontend_visitas",
+    "name": "SMC VS",
+    "short_name": "SMC VS",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#hexcode",
+    "theme_color": "#hexcode",
+    "description": "SMC VS - Sistema de Monitoreo y Control de Visitas",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

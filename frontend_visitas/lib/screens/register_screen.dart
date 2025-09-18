@@ -22,7 +22,7 @@ class RegisterScreen extends StatelessWidget {
       return;
     }
 
-   final url = Uri.parse('$baseUrl/register');
+       final url = Uri.parse('$baseUrl/api/auth/register');
 
 
     try {
@@ -33,22 +33,22 @@ class RegisterScreen extends StatelessWidget {
           "nombre": nombre,
           "correo": correo,
           "contrasena": contrasena,
-          "rol_id": 1, // Rol visitador
+          "rol_id": 1, // Rol Visitador
         }),
       );
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Registro exitoso. Inicia sesión.")),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("❌ Error al registrarse: ${response.body}"),
-          ),
-        );
-      }
+      if (response.statusCode == 200 || response.statusCode == 201) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("✅ Registro exitoso. Ya puedes iniciar sesión.")),
+  );
+  Navigator.pop(context); // Vuelve a la pantalla de login
+} else {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text("❌ Error al registrarse: ${response.body}"),
+    ),
+  );
+}
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ Error de conexión con el servidor")),
@@ -76,21 +76,57 @@ class RegisterScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                          labelText: 'Nombre completo'),
+                      decoration: InputDecoration(
+                        labelText: 'Nombre completo',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: const Color(0xFF008BE8)),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: emailController,
-                      decoration:
-                          const InputDecoration(labelText: 'Correo electrónico'),
+                      decoration: InputDecoration(
+                        labelText: 'Correo electrónico',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: const Color(0xFF008BE8)),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: passwordController,
                       obscureText: true,
-                      decoration:
-                          const InputDecoration(labelText: 'Contraseña'),
+                      decoration: InputDecoration(
+                        labelText: 'Contraseña',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: const Color(0xFF008BE8)),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(

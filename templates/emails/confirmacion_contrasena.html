@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contraseña Cambiada - Sistema PAE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 5px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .content { padding: 40px 30px; background-color: #ffffff; }
+        .greeting { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 20px; }
+        .message { font-size: 16px; color: #555; margin-bottom: 30px; line-height: 1.8; }
+        .success-section { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 1px solid #c3e6cb; border-radius: 8px; padding: 25px; margin: 30px 0; text-align: center; }
+        .success-icon { font-size: 48px; margin-bottom: 15px; }
+        .success-title { font-size: 20px; font-weight: 600; color: #155724; margin-bottom: 10px; }
+        .success-message { color: #155724; font-size: 16px; }
+        .info-section { background-color: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 6px; padding: 20px; margin: 25px 0; }
+        .info-title { font-weight: 600; color: #004085; margin-bottom: 15px; font-size: 16px; }
+        .info-list { list-style: none; padding: 0; }
+        .info-list li { color: #004085; margin-bottom: 8px; padding-left: 20px; position: relative; }
+        .info-list li:before { content: "✅"; position: absolute; left: 0; }
+        .warning-section { background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 20px; margin: 25px 0; }
+        .warning-title { font-weight: 600; color: #856404; margin-bottom: 10px; font-size: 16px; }
+        .warning-message { color: #856404; font-size: 14px; }
+        .footer { background-color: #2c3e50; color: white; padding: 25px 30px; text-align: center; font-size: 12px; line-height: 1.6; }
+        .footer p { opacity: 0.8; }
+        .timestamp { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin: 20px 0; text-align: center; font-size: 14px; color: #6c757d; }
+        @media only screen and (max-width: 600px) {
+            .email-container { margin: 10px; border-radius: 4px; }
+            .header { padding: 20px 15px; }
+            .header h1 { font-size: 20px; }
+            .content { padding: 25px 20px; }
+            .success-icon { font-size: 36px; }
+            .footer { padding: 20px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🔐 Sistema PAE</h1>
+            <p>Contraseña Cambiada Exitosamente</p>
+        </div>
+        <div class="content">
+            <div class="greeting">Hola {{ username }},</div>
+            <div class="message">Tu contraseña ha sido cambiada exitosamente en el <strong>Sistema PAE</strong>. Ya puedes acceder a tu cuenta con tu nueva contraseña.</div>
+            <div class="success-section">
+                <div class="success-icon">✅</div>
+                <div class="success-title">¡Contraseña Actualizada!</div>
+                <div class="success-message">Tu contraseña ha sido modificada correctamente</div>
+            </div>
+            <div class="info-section">
+                <div class="info-title">🔒 Información de Seguridad:</div>
+                <ul class="info-list">
+                    <li>Tu nueva contraseña está activa inmediatamente</li>
+                    <li>Se ha enviado una notificación de seguridad</li>
+                    <li>Tu sesión anterior ha sido cerrada automáticamente</li>
+                    <li>Debes iniciar sesión nuevamente con tu nueva contraseña</li>
+                </ul>
+            </div>
+            <div class="warning-section">
+                <div class="warning-title">⚠️ Importante:</div>
+                <div class="warning-message">Si no realizaste este cambio de contraseña, contacta inmediatamente al administrador del sistema para reportar una posible brecha de seguridad.</div>
+            </div>
+            <div class="timestamp">📅 Fecha y hora del cambio: {{ fecha }}</div>
+        </div>
+        <div class="footer">
+            <p><strong>Sistema PAE - Gestión de Visitas Educativas</strong><br>Este es un email automático del sistema. No respondas a este mensaje.<br>Para soporte técnico, contacta al administrador del sistema.</p>
+        </div>
+    </div>
+</body>
+</html> 

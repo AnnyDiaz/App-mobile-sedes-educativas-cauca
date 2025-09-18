@@ -4,11 +4,17 @@ from jose import JWTError, jwt
 from app.database import get_db
 from app import models
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+import os
+
+# Usar la misma clave secreta que en auth.py
+SECRET_KEY = os.getenv("SECRET_KEY", "una_clave_secreta_por_defecto_solo_para_desarrollo")
+ALGORITHM = "HS256"
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_db)):
     try:
-        payload = jwt.decode(token, "clave-secreta", algorithms=["HS256"])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_email = payload.get("sub")
         if user_email is None:
             raise HTTPException(status_code=401, detail="Token inválido")
