@@ -211,170 +211,166 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
   }
 
   void _mostrarFiltros() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
       builder: (context) => _buildFiltrosModal(),
     );
   }
 
   Widget _buildFiltrosModal() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return AlertDialog(
+      title: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Filtros de Búsqueda',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Filtro por Contrato
-          DropdownButtonFormField<String>(
-            value: _contratoFiltro,
-            decoration: const InputDecoration(
-              labelText: 'Contrato',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('Todos los contratos'),
-              ),
-              ..._contratos.map((contrato) => DropdownMenuItem<String>(
-                value: contrato,
-                child: Text(contrato),
-              )),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _contratoFiltro = value;
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          
-          // Filtro por Operador
-          DropdownButtonFormField<String>(
-            value: _operadorFiltro,
-            decoration: const InputDecoration(
-              labelText: 'Operador',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('Todos los operadores'),
-              ),
-              ..._operadores.map((operador) => DropdownMenuItem<String>(
-                value: operador,
-                child: Text(operador),
-              )),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _operadorFiltro = value;
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          
-          // Filtro por Estado
-          DropdownButtonFormField<String>(
-            value: _estadoFiltro,
-            decoration: const InputDecoration(
-              labelText: 'Estado',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('Todos los estados'),
-              ),
-              ..._estados.map((estado) => DropdownMenuItem<String>(
-                value: estado,
-                child: Text(estado),
-              )),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _estadoFiltro = value;
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          
-          // Filtro por Fecha Inicio
-          TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Fecha Inicio (YYYY-MM-DD)',
-              border: OutlineInputBorder(),
-              hintText: '2024-01-01',
-            ),
-            initialValue: _fechaInicioFiltro,
-            onChanged: (value) {
-              _fechaInicioFiltro = value.isEmpty ? null : value;
-            },
-          ),
-          const SizedBox(height: 16),
-          
-          // Filtro por Fecha Fin
-          TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Fecha Fin (YYYY-MM-DD)',
-              border: OutlineInputBorder(),
-              hintText: '2024-12-31',
-            ),
-            initialValue: _fechaFinFiltro,
-            onChanged: (value) {
-              _fechaFinFiltro = value.isEmpty ? null : value;
-            },
-          ),
-          const SizedBox(height: 24),
-          
-          // Botones
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _limpiarFiltros,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Limpiar'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _cargarVisitasCompletas();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Aplicar Filtros'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          Icon(Icons.search, color: Colors.blue[600]),
+          const SizedBox(width: 8),
+          const Text('Buscador de Visitas'),
         ],
       ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Filtra las visitas por contrato, operador, estado o fechas:',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            
+            // Filtro por Contrato
+            DropdownButtonFormField<String>(
+              value: _contratoFiltro,
+              decoration: const InputDecoration(
+                labelText: 'Contrato',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.business),
+              ),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('Todos los contratos'),
+                ),
+                ..._contratos.map((contrato) => DropdownMenuItem<String>(
+                  value: contrato,
+                  child: Text(contrato),
+                )),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _contratoFiltro = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Filtro por Operador
+            DropdownButtonFormField<String>(
+              value: _operadorFiltro,
+              decoration: const InputDecoration(
+                labelText: 'Operador',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('Todos los operadores'),
+                ),
+                ..._operadores.map((operador) => DropdownMenuItem<String>(
+                  value: operador,
+                  child: Text(operador),
+                )),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _operadorFiltro = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Filtro por Estado
+            DropdownButtonFormField<String>(
+              value: _estadoFiltro,
+              decoration: const InputDecoration(
+                labelText: 'Estado',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.flag),
+              ),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('Todos los estados'),
+                ),
+                ..._estados.map((estado) => DropdownMenuItem<String>(
+                  value: estado,
+                  child: Text(estado),
+                )),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _estadoFiltro = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Filtro por Fecha Inicio
+            TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Fecha Inicio (YYYY-MM-DD)',
+                border: OutlineInputBorder(),
+                hintText: '2024-01-01',
+                prefixIcon: Icon(Icons.calendar_today),
+              ),
+              initialValue: _fechaInicioFiltro,
+              onChanged: (value) {
+                _fechaInicioFiltro = value.isEmpty ? null : value;
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Filtro por Fecha Fin
+            TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Fecha Fin (YYYY-MM-DD)',
+                border: OutlineInputBorder(),
+                hintText: '2024-12-31',
+                prefixIcon: Icon(Icons.calendar_today),
+              ),
+              initialValue: _fechaFinFiltro,
+              onChanged: (value) {
+                _fechaFinFiltro = value.isEmpty ? null : value;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _limpiarFiltros,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey[600],
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Limpiar'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            _cargarVisitasCompletas();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue[600],
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Aplicar Filtros'),
+        ),
+      ],
     );
   }
 
