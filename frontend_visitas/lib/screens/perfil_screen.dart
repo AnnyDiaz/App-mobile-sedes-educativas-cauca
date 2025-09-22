@@ -6,6 +6,7 @@ import 'package:frontend_visitas/screens/about_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend_visitas/screens/auth_screen.dart';
 import 'package:frontend_visitas/utils/responsive_utils.dart';
+import 'package:frontend_visitas/services/error_handler_service.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -74,14 +75,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
       );
 
       if (confirmar == true) {
-        // Limpiar token y datos de sesión
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-
-        // Navegar a la pantalla de login (ruta nombrada)
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/login');
-        }
+        // Usar el servicio de error handler para cerrar sesión de forma segura
+        await ErrorHandlerService.processLogout(context);
       }
     } catch (e) {
       if (mounted) {

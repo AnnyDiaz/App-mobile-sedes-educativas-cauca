@@ -387,6 +387,7 @@ class _ProgramarVisitaVisitadorScreenState extends State<ProgramarVisitaVisitado
                 
                 return DropdownButtonFormField<Municipio>(
                   value: _municipioSeleccionado,
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Municipio *',
                     border: OutlineInputBorder(),
@@ -394,7 +395,11 @@ class _ProgramarVisitaVisitadorScreenState extends State<ProgramarVisitaVisitado
                   items: municipios.map((municipio) {
                     return DropdownMenuItem(
                       value: municipio,
-                      child: Text(municipio.nombre),
+                      child: Text(
+                        municipio.nombre,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     );
                   }).toList(),
                   onChanged: (Municipio? municipio) {
@@ -429,6 +434,7 @@ class _ProgramarVisitaVisitadorScreenState extends State<ProgramarVisitaVisitado
                 
                 return DropdownButtonFormField<Institucion>(
                   value: _institucionSeleccionada,
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Institución Educativa *',
                     border: OutlineInputBorder(),
@@ -436,7 +442,11 @@ class _ProgramarVisitaVisitadorScreenState extends State<ProgramarVisitaVisitado
                   items: instituciones.map((institucion) {
                     return DropdownMenuItem(
                       value: institucion,
-                      child: Text(institucion.nombre),
+                      child: Text(
+                        institucion.nombre,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     );
                   }).toList(),
                   onChanged: (Institucion? institucion) {
@@ -470,6 +480,7 @@ class _ProgramarVisitaVisitadorScreenState extends State<ProgramarVisitaVisitado
                 
                 return DropdownButtonFormField<Sede>(
                   value: _sedeSeleccionada,
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Sede Educativa *',
                     border: OutlineInputBorder(),
@@ -477,7 +488,11 @@ class _ProgramarVisitaVisitadorScreenState extends State<ProgramarVisitaVisitado
                   items: sedes.map((sede) {
                     return DropdownMenuItem(
                       value: sede,
-                      child: Text(sede.nombre),
+                      child: Text(
+                        sede.nombre,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     );
                   }).toList(),
                   onChanged: (Sede? sede) {

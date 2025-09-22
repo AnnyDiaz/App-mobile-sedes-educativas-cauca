@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:frontend_visitas/services/permission_service.dart';
 
 // Importa tus modelos y configuración
 import 'package:frontend_visitas/config.dart';
@@ -28,6 +30,8 @@ import 'package:frontend_visitas/models/visita_programada.dart';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/material.dart';
+import 'error_handler_service.dart';
 
 class ApiService {
   // Configuración de almacenamiento seguro
@@ -73,8 +77,6 @@ class ApiService {
     
     // Verificar si el token está expirado
     if (JwtDecoder.isExpired(token)) {
-      print('🔐 Token expirado detectado. Intentando renovar...');
-      
       // Intentar renovar el token
       final refreshed = await refreshAccessToken();
       if (refreshed) {
@@ -85,7 +87,6 @@ class ApiService {
           'Authorization': 'Bearer $newToken',
         };
       } else {
-        print('❌ No se pudo renovar el token. Cerrando sesión...');
         await logout();
         return {
           'Content-Type': 'application/json; charset=UTF-8',
@@ -278,7 +279,6 @@ class ApiService {
       
       final response = await http.get(Uri.parse(url), headers: headers);
       
-      print('📌 Respuesta de municipios - Status: ${response.statusCode}');
       print('📌 Body: ${response.body}');
       
       if (response.statusCode == 200) {
@@ -321,7 +321,6 @@ class ApiService {
       
       final response = await http.get(Uri.parse(url), headers: headers);
       
-      print('📌 Respuesta de instituciones - Status: ${response.statusCode}');
       print('📌 Body: ${response.body}');
       
       if (response.statusCode == 200) {
@@ -368,7 +367,6 @@ class ApiService {
       
       final response = await http.get(Uri.parse(url), headers: headers);
       
-      print('📌 Respuesta de sedes - Status: ${response.statusCode}');
       print('📌 Body: ${response.body}');
       
       if (response.statusCode == 200) {
@@ -400,7 +398,6 @@ class ApiService {
       
       final response = await http.get(Uri.parse(url), headers: headers);
       
-      print('📌 Respuesta de sedes - Status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -565,8 +562,10 @@ class ApiService {
         body: jsonEncode(body),
       );
 
-      print('📌 Respuesta del servidor - Status: ${response.statusCode}');
-      print('📌 Body: ${response.body}');
+      // Verificar si es un error de autenticación
+      if (response.statusCode == 401) {
+        throw Exception('UNAUTHORIZED');
+      }
 
       // NUEVO: Sincronizar todas las visitas después de crear la visita completa
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -587,13 +586,10 @@ class ApiService {
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print('❌ Error en crearCronogramaPAE: $e');
-      
       // Verificar si es un error de autenticación
-      if (e.toString().contains('401') || e.toString().contains('Unauthorized')) {
-        print('🔐 Error de autenticación detectado. Limpiando token...');
+      if (e.toString().contains('UNAUTHORIZED') || e.toString().contains('401') || e.toString().contains('Unauthorized')) {
         await logout(); // Limpiar token expirado
-        throw Exception('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        throw Exception('UNAUTHORIZED');
       }
       
       throw Exception('Error al crear cronograma PAE: $e');
@@ -1344,7 +1340,7 @@ class ApiService {
   }
 
   // --- GENERAR REPORTES ---
-  Future<void> generarReporte(Map<String, dynamic> parametros) async {
+  Future<String?> generarReporte(Map<String, dynamic> parametros) async {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
@@ -1379,19 +1375,26 @@ class ApiService {
           final timestamp = DateTime.now().millisecondsSinceEpoch;
           final filename = 'reporte_$timestamp.$extension';
           
-          if (kIsWeb) {
-            await _descargarArchivoWeb(response.bodyBytes, filename, mimeType);
-          } else {
-            // Para móvil, guardar en el dispositivo
-            final directory = await getApplicationDocumentsDirectory();
-            final file = File('${directory.path}/$filename');
-            await file.writeAsBytes(response.bodyBytes);
-            print('✅ Reporte guardado en: ${file.path}');
+        if (kIsWeb) {
+          await _descargarArchivoWeb(response.bodyBytes, filename, mimeType);
+          return 'Archivo descargado en el navegador';
+        } else {
+          // Para móvil, verificar permisos y guardar en el directorio de descargas
+          final hasPermissions = await PermissionService.requestStoragePermissions();
+          if (!hasPermissions) {
+            throw Exception('Se requieren permisos de almacenamiento para descargar el archivo. Por favor, habilita los permisos en la configuración de la aplicación.');
           }
           
-          print('✅ Reporte descargado exitosamente: $filename');
+          final downloadsDir = await _obtenerDirectorioDescargas();
+          final file = File('${downloadsDir.path}/$filename');
+          await file.writeAsBytes(response.bodyBytes);
+          print('✅ Reporte guardado en: ${file.path}');
+          
+          return file.path;
+        }
         } else {
           print('✅ Reporte generado exitosamente (sin descarga directa)');
+          return null;
         }
       } else {
         throw Exception('Error al generar reporte. Código: ${response.statusCode}, Respuesta: ${response.body}');
@@ -1716,6 +1719,7 @@ class ApiService {
     String? estado,
     String? fechaInicio,
     String? fechaFin,
+    bool soloDelUsuario = false, // Nuevo parámetro para filtrar por usuario
   }) async {
     try {
       final headers = await _getHeaders();
@@ -1729,6 +1733,14 @@ class ApiService {
       if (estado != null && estado.isNotEmpty) queryParams['estado'] = estado;
       if (fechaInicio != null && fechaInicio.isNotEmpty) queryParams['fecha_inicio'] = fechaInicio;
       if (fechaFin != null && fechaFin.isNotEmpty) queryParams['fecha_fin'] = fechaFin;
+      
+      // Si se solicita solo del usuario, agregar el filtro
+      if (soloDelUsuario) {
+        final usuarioId = await getUsuarioId();
+        if (usuarioId != null) {
+          queryParams['usuario_id'] = usuarioId.toString();
+        }
+      }
       
       final uri = Uri.parse('$baseUrl/api/visitas-completas-pae').replace(
         queryParameters: queryParams,
@@ -1827,7 +1839,7 @@ class ApiService {
   }
 
   // --- DESCARGAR EXCEL DE VISITA COMPLETA ---
-  Future<void> descargarExcelVisita(int visitaId) async {
+  Future<String?> descargarExcelVisita(int visitaId) async {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
@@ -1847,32 +1859,18 @@ class ApiService {
         
         // En Flutter móvil, guardamos el archivo en el directorio de descargas
         if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-          // Solicitar permisos de almacenamiento en Android
-          if (Platform.isAndroid) {
-            final status = await Permission.storage.request();
-            if (!status.isGranted) {
-              throw Exception('Se requieren permisos de almacenamiento para descargar el archivo');
-            }
+          // Verificar y solicitar permisos de almacenamiento
+          final hasPermissions = await PermissionService.requestStoragePermissions();
+          if (!hasPermissions) {
+            throw Exception('Se requieren permisos de almacenamiento para descargar el archivo. Por favor, habilita los permisos en la configuración de la aplicación.');
           }
           
-          // Obtener directorio de descargas
-          Directory? downloadsDir;
-          if (Platform.isAndroid) {
-            downloadsDir = Directory('/storage/emulated/0/Download');
-            if (!await downloadsDir.exists()) {
-              downloadsDir = await getExternalStorageDirectory();
-            }
-          } else {
-            downloadsDir = await getApplicationDocumentsDirectory();
-          }
-          
-          if (downloadsDir != null) {
-            final file = File('${downloadsDir.path}/$filename');
-            await file.writeAsBytes(bytes);
-            print('✅ Excel guardado en: ${file.path}');
-          } else {
-            throw Exception('No se pudo acceder al directorio de descargas');
-          }
+          // Obtener directorio de descargas usando el método mejorado
+          final downloadsDir = await _obtenerDirectorioDescargas();
+          final file = File('${downloadsDir.path}/$filename');
+          await file.writeAsBytes(bytes);
+          print('✅ Excel guardado en: ${file.path}');
+          return file.path;
         } else if (kIsWeb) {
           // Para Flutter web, usar un enfoque directo
           print('🌐 Descargando Excel en Flutter web...');
@@ -1880,6 +1878,7 @@ class ApiService {
           try {
             await _descargarExcelWeb(bytes, filename);
             print('✅ Excel descargado en Flutter web: $filename');
+            return filename;
           } catch (e) {
             print('❌ Error al descargar Excel en web: $e');
             throw Exception('Error al descargar Excel en web: $e');
@@ -1887,9 +1886,8 @@ class ApiService {
         } else {
           // Para otras plataformas
           print('⚠️ Descarga de Excel no implementada para esta plataforma');
+          return null;
         }
-        
-        print('✅ Excel descargado exitosamente: $filename');
       } else {
         throw Exception('Error al descargar Excel. Código: ${response.statusCode}, Respuesta: ${response.body}');
       }
@@ -2907,6 +2905,41 @@ class ApiService {
     } catch (e) {
       print('❌ Error en descargarReporteEquipo: $e');
       throw Exception('Error al descargar reporte del equipo: $e');
+    }
+  }
+
+  /// Obtiene el directorio de descargas, creando la carpeta SMC si es necesario
+  Future<Directory> _obtenerDirectorioDescargas() async {
+    try {
+      Directory downloadsDir;
+      
+      if (Platform.isAndroid) {
+        // Para Android, usar el directorio de descargas estándar
+        downloadsDir = Directory('/storage/emulated/0/Download');
+        if (!await downloadsDir.exists()) {
+          // Fallback al directorio externo
+          downloadsDir = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
+        }
+      } else if (Platform.isIOS) {
+        // Para iOS, usar el directorio de documentos
+        downloadsDir = await getApplicationDocumentsDirectory();
+      } else {
+        // Para otras plataformas
+        downloadsDir = await getApplicationDocumentsDirectory();
+      }
+      
+      // Crear subdirectorio SMC
+      final smcDir = Directory('${downloadsDir.path}/SMC');
+      if (!await smcDir.exists()) {
+        await smcDir.create(recursive: true);
+        print('📁 Directorio SMC creado: ${smcDir.path}');
+      }
+      
+      return smcDir;
+    } catch (e) {
+      print('❌ Error al obtener directorio de descargas: $e');
+      // Fallback al directorio de documentos
+      return await getApplicationDocumentsDirectory();
     }
   }
 

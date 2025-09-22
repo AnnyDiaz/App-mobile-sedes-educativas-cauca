@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/register_screen.dart';
@@ -72,7 +73,8 @@ class SMCApp extends StatelessWidget {
             themeMode: themeProvider.themeMode,
             initialRoute: '/',
       routes: {
-        '/': (context) => const WelcomeScreen(),
+        '/': (context) => const SplashScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
         '/auth': (context) => const AuthScreen(),
         '/register': (context) => RegisterScreen(),
         '/admin_dashboard': (context) => AdminDashboardProfessional(),

@@ -39,12 +39,16 @@ class _EvidenciasWidgetState extends State<EvidenciasWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Evidencias',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+            Expanded(
+              child: Text(
+                'Evidencias',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
             if (widget.evidencias.isNotEmpty)
@@ -60,12 +64,16 @@ class _EvidenciasWidgetState extends State<EvidenciasWidget> {
                   children: [
                     Icon(Icons.attach_file, size: 14, color: Colors.blue.shade700),
                     const SizedBox(width: 4),
-                    Text(
-                      '${widget.evidencias.length}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue.shade700,
+                    Flexible(
+                      child: Text(
+                        '${widget.evidencias.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue.shade700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   ],
@@ -155,12 +163,16 @@ class _EvidenciasWidgetState extends State<EvidenciasWidget> {
                 style: const TextStyle(fontSize: 12),
               ),
               const SizedBox(width: 2),
-              Text(
-                '${entry.value}',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: Color(_getColorTipo(entry.key)),
+              Flexible(
+                child: Text(
+                  '${entry.value}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(_getColorTipo(entry.key)),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
@@ -552,6 +564,8 @@ class _EvidenciaPreview extends StatelessWidget {
             child: Text(
               value,
               style: TextStyle(color: Colors.grey.shade800),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -628,14 +642,14 @@ class _BotonAgregarEvidencia extends StatelessWidget {
         ),
       ),
       itemBuilder: (context) => esParaFirma ? [
-        // Solo opción de cámara para firmas
+        // Solo opción de cámara para firmas - eliminada opción de galería
         const PopupMenuItem(
           value: 'camara',
           child: Row(
             children: [
               Icon(Icons.camera_alt, color: Colors.blue),
               SizedBox(width: 12),
-              Text('Tomar foto de firma'),
+              Text('Tomar foto de firma con cámara'),
             ],
           ),
         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_visitas/services/api_service.dart';
 import 'package:frontend_visitas/models/visita.dart';
+import 'package:frontend_visitas/utils/permisos_helper.dart';
+import 'package:app_settings/app_settings.dart';
 
 class VisitasCompletasScreen extends StatefulWidget {
   const VisitasCompletasScreen({super.key});
@@ -15,38 +17,20 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
   bool _isLoading = true;
   String? _error;
   
-  // Filtros
-  String? _contratoFiltro;
-  String? _operadorFiltro;
-  String? _estadoFiltro;
-  String? _fechaInicioFiltro;
-  String? _fechaFinFiltro;
-  
-  // Opciones de filtros
-  List<String> _contratos = [];
-  List<String> _operadores = [];
-  List<String> _estados = [];
-  bool _filtrosCargados = false;
+  // Buscador único
+  String _terminoBusqueda = '';
+  final TextEditingController _busquedaController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _cargarOpcionesFiltros();
     _cargarVisitasCompletas();
   }
 
-  Future<void> _cargarOpcionesFiltros() async {
-    try {
-      final opciones = await _apiService.getOpcionesFiltrosVisitas();
-      setState(() {
-        _contratos = opciones['contratos'] ?? [];
-        _operadores = opciones['operadores'] ?? [];
-        _estados = opciones['estados'] ?? [];
-        _filtrosCargados = true;
-      });
-    } catch (e) {
-      print('Error al cargar opciones de filtros: $e');
-    }
+  @override
+  void dispose() {
+    _busquedaController.dispose();
+    super.dispose();
   }
 
   Future<void> _cargarVisitasCompletas() async {
@@ -56,13 +40,13 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
         _error = null;
       });
 
-      // Usar el endpoint con filtros
+      // Verificar el rol del usuario para determinar si filtrar por usuario
+      final permisos = await PermisosHelper.getPermisos();
+      final esVisitador = permisos['es_visitador'] ?? false;
+      
+      // Si es visitador, solo cargar sus propias visitas
       final visitas = await _apiService.getVisitasCompletas(
-        contrato: _contratoFiltro,
-        operador: _operadorFiltro,
-        estado: _estadoFiltro,
-        fechaInicio: _fechaInicioFiltro,
-        fechaFin: _fechaFinFiltro,
+        soloDelUsuario: esVisitador,
       );
       
       setState(() {
@@ -79,39 +63,104 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
 
   void _limpiarFiltros() {
     setState(() {
-      _contratoFiltro = null;
-      _operadorFiltro = null;
-      _estadoFiltro = null;
-      _fechaInicioFiltro = null;
-      _fechaFinFiltro = null;
+      _terminoBusqueda = '';
+      _busquedaController.clear();
     });
-    _cargarVisitasCompletas();
   }
 
   bool _tieneFiltrosActivos() {
-    return _contratoFiltro != null ||
-           _operadorFiltro != null ||
-           _estadoFiltro != null ||
-           _fechaInicioFiltro != null ||
-           _fechaFinFiltro != null;
+    return _terminoBusqueda.isNotEmpty;
+  }
+
+  List<Visita> _filtrarVisitas() {
+    if (_terminoBusqueda.isEmpty) {
+      return _visitas;
+    }
+
+    final termino = _terminoBusqueda.toLowerCase();
+    return _visitas.where((visita) {
+      // Buscar en contrato
+      if (visita.contrato?.toLowerCase().contains(termino) == true) return true;
+      
+      // Buscar en operador
+      if (visita.operador?.toLowerCase().contains(termino) == true) return true;
+      
+      // Buscar en estado
+      if (visita.estado?.toLowerCase().contains(termino) == true) return true;
+      
+      // Buscar en fecha (formato YYYY-MM-DD)
+      if (visita.fechaCreacion != null) {
+        final fechaStr = visita.fechaCreacion!.toIso8601String().split('T')[0];
+        if (fechaStr.contains(termino)) return true;
+      }
+      
+      // Buscar en observaciones
+      if (visita.observaciones?.toLowerCase().contains(termino) == true) return true;
+      
+      // Buscar en nombre de la sede
+      if (visita.sede?.nombre?.toLowerCase().contains(termino) == true) return true;
+      
+      // Buscar en nombre de la institución
+      if (visita.institucion?.nombre?.toLowerCase().contains(termino) == true) return true;
+      
+      // Buscar en nombre del municipio
+      if (visita.municipio?.nombre?.toLowerCase().contains(termino) == true) return true;
+      
+      return false;
+    }).toList();
   }
 
   Future<void> _descargarExcel(int visitaId) async {
     try {
-      await _apiService.descargarExcelVisita(visitaId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Excel descargado exitosamente para visita #$visitaId'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      final rutaArchivo = await _apiService.descargarExcelVisita(visitaId);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('✅ Excel descargado exitosamente para visita #$visitaId'),
+                if (rutaArchivo != null) ...[
+                  SizedBox(height: 4),
+                  Text(
+                    '📁 Ubicación: $rutaArchivo',
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al descargar Excel: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      String mensajeError = 'Error al descargar Excel: $e';
+      
+      // Manejar específicamente errores de permisos
+      if (e.toString().contains('permisos de almacenamiento')) {
+        mensajeError = 'Se requieren permisos de almacenamiento para descargar el archivo.\n\n'
+            'Por favor, ve a Configuración > Aplicaciones > SMC VS > Permisos y habilita "Almacenamiento".';
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(mensajeError),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 8),
+            action: SnackBarAction(
+              label: 'Configuración',
+              textColor: Colors.white,
+              onPressed: () {
+                AppSettings.openAppSettings();
+              },
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -132,13 +181,9 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
         ),
       );
 
-      // Generar reporte con los filtros aplicados
+      // Generar reporte con el término de búsqueda
       final reporteData = {
-        'fecha_inicio': _fechaInicioFiltro,
-        'fecha_fin': _fechaFinFiltro,
-        'municipio_id': null, // No implementado en filtros actuales
-        'institucion_id': null, // No implementado en filtros actuales
-        'estado': _estadoFiltro,
+        'busqueda': _terminoBusqueda.isNotEmpty ? _terminoBusqueda : null,
         'tipo_reporte': 'excel',
       };
 
@@ -190,7 +235,7 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
               tooltip: 'Limpiar filtros',
             ),
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.search),
             onPressed: _mostrarFiltros,
             tooltip: 'Filtros',
           ),
@@ -226,113 +271,74 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
           const Text('Buscador de Visitas'),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Busca visitas por contrato o operador (filtrado en tiempo real), o filtra por estado y fechas:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Busca visitas por contrato, operador, estado o fecha. El filtrado es en tiempo real:',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          const SizedBox(height: 20),
+          
+          // Buscador único
+          TextFormField(
+            controller: _busquedaController,
+            decoration: InputDecoration(
+              labelText: 'Buscar visita',
+              hintText: 'Buscar visita por contrato, operador, estado o fecha...',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.search, color: Colors.blue[600]),
+              suffixIcon: _terminoBusqueda.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          _terminoBusqueda = '';
+                          _busquedaController.clear();
+                        });
+                      },
+                    )
+                  : null,
             ),
-            const SizedBox(height: 20),
-            
-            // Buscador por Contrato
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Buscar por Contrato',
-                hintText: 'Escribe el nombre o número del contrato...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-                suffixIcon: Icon(Icons.business),
-              ),
-              initialValue: _contratoFiltro ?? '',
-              onChanged: (value) {
-                setState(() {
-                  _contratoFiltro = value.isEmpty ? null : value;
-                });
-                // Filtrado en tiempo real
-                _cargarVisitasCompletas();
-              },
+            onChanged: (value) {
+              setState(() {
+                _terminoBusqueda = value;
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          
+          // Información sobre qué campos se pueden buscar
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
             ),
-            const SizedBox(height: 16),
-            
-            // Buscador por Operador
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Buscar por Operador',
-                hintText: 'Escribe el nombre del operador...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-                suffixIcon: Icon(Icons.person),
-              ),
-              initialValue: _operadorFiltro ?? '',
-              onChanged: (value) {
-                setState(() {
-                  _operadorFiltro = value.isEmpty ? null : value;
-                });
-                // Filtrado en tiempo real
-                _cargarVisitasCompletas();
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            // Filtro por Estado
-            DropdownButtonFormField<String>(
-              value: _estadoFiltro,
-              decoration: const InputDecoration(
-                labelText: 'Estado',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.flag),
-              ),
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('Todos los estados'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Puedes buscar por:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[700],
+                  ),
                 ),
-                ..._estados.map((estado) => DropdownMenuItem<String>(
-                  value: estado,
-                  child: Text(estado),
-                )),
+                const SizedBox(height: 4),
+                Text(
+                  '• Contrato: "CON-2024", "12345"\n• Operador: "Juan Pérez", "María"\n• Estado: "Completada", "Pendiente"\n• Fecha: "2024-01-15", "enero"\n• Sede: "Escuela Central"\n• Institución: "Universidad"\n• Municipio: "Popayán"',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue[600],
+                  ),
+                ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _estadoFiltro = value;
-                });
-              },
             ),
-            const SizedBox(height: 16),
-            
-            // Filtro por Fecha Inicio
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Fecha Inicio (YYYY-MM-DD)',
-                border: OutlineInputBorder(),
-                hintText: '2024-01-01',
-                prefixIcon: Icon(Icons.calendar_today),
-              ),
-              initialValue: _fechaInicioFiltro,
-              onChanged: (value) {
-                _fechaInicioFiltro = value.isEmpty ? null : value;
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            // Filtro por Fecha Fin
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Fecha Fin (YYYY-MM-DD)',
-                border: OutlineInputBorder(),
-                hintText: '2024-12-31',
-                prefixIcon: Icon(Icons.calendar_today),
-              ),
-              initialValue: _fechaFinFiltro,
-              onChanged: (value) {
-                _fechaFinFiltro = value.isEmpty ? null : value;
-              },
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -340,7 +346,10 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: _limpiarFiltros,
+          onPressed: () {
+            _limpiarFiltros();
+            Navigator.pop(context);
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.grey[600],
             foregroundColor: Colors.white,
@@ -350,13 +359,12 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
         ElevatedButton(
           onPressed: () {
             Navigator.pop(context);
-            _cargarVisitasCompletas();
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue[600],
             foregroundColor: Colors.white,
           ),
-          child: const Text('Aplicar Filtros'),
+          child: const Text('Aplicar'),
         ),
       ],
     );
@@ -366,69 +374,29 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       color: Colors.blue.shade50,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Text(
-            'Filtros activos:',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Icon(Icons.search, color: Colors.blue[600], size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Buscando: "$_terminoBusqueda"',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[700],
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              if (_contratoFiltro != null)
-                Chip(
-                  label: Text('Contrato: $_contratoFiltro'),
-                  onDeleted: () {
-                    setState(() {
-                      _contratoFiltro = null;
-                    });
-                    _cargarVisitasCompletas();
-                  },
-                ),
-              if (_operadorFiltro != null)
-                Chip(
-                  label: Text('Operador: $_operadorFiltro'),
-                  onDeleted: () {
-                    setState(() {
-                      _operadorFiltro = null;
-                    });
-                    _cargarVisitasCompletas();
-                  },
-                ),
-              if (_estadoFiltro != null)
-                Chip(
-                  label: Text('Estado: $_estadoFiltro'),
-                  onDeleted: () {
-                    setState(() {
-                      _estadoFiltro = null;
-                    });
-                    _cargarVisitasCompletas();
-                  },
-                ),
-              if (_fechaInicioFiltro != null)
-                Chip(
-                  label: Text('Desde: $_fechaInicioFiltro'),
-                  onDeleted: () {
-                    setState(() {
-                      _fechaInicioFiltro = null;
-                    });
-                    _cargarVisitasCompletas();
-                  },
-                ),
-              if (_fechaFinFiltro != null)
-                Chip(
-                  label: Text('Hasta: $_fechaFinFiltro'),
-                  onDeleted: () {
-                    setState(() {
-                      _fechaFinFiltro = null;
-                    });
-                    _cargarVisitasCompletas();
-                  },
-                ),
-            ],
+          Chip(
+            label: Text('${_filtrarVisitas().length} resultados'),
+            backgroundColor: Colors.blue[100],
+            labelStyle: TextStyle(color: Colors.blue[700]),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: _limpiarFiltros,
+            icon: Icon(Icons.clear, color: Colors.red[600]),
+            tooltip: 'Limpiar búsqueda',
           ),
         ],
       ),
@@ -471,17 +439,32 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
       );
     }
 
-    if (_visitas.isEmpty) {
-      return const Center(
+    final visitasFiltradas = _filtrarVisitas();
+    
+    if (visitasFiltradas.isEmpty) {
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assignment, color: Colors.grey, size: 64),
-            SizedBox(height: 16),
-            Text(
-              'No hay visitas completas registradas',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+            Icon(
+              _terminoBusqueda.isNotEmpty ? Icons.search_off : Icons.assignment,
+              color: Colors.grey,
+              size: 64,
             ),
+            const SizedBox(height: 16),
+            Text(
+              _terminoBusqueda.isNotEmpty 
+                  ? 'No se encontraron visitas con "$_terminoBusqueda"'
+                  : 'No hay visitas completas registradas',
+              style: const TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+            if (_terminoBusqueda.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: _limpiarFiltros,
+                child: const Text('Limpiar búsqueda'),
+              ),
+            ],
           ],
         ),
       );
@@ -489,9 +472,9 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _visitas.length,
+      itemCount: visitasFiltradas.length,
       itemBuilder: (context, index) {
-        final visita = _visitas[index];
+        final visita = visitasFiltradas[index];
         return _buildVisitaCard(visita);
       },
     );
@@ -509,11 +492,17 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Visita #${visita.id}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    visita.numeroVisitaUsuario != null 
+                        ? 'Visita #${visita.numeroVisitaUsuario}'
+                        : 'Visita #${visita.id}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
                 _buildEstadoChip(visita.estado ?? 'Sin estado'),
@@ -584,6 +573,8 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
             child: Text(
               value,
               style: const TextStyle(fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -637,7 +628,7 @@ class _VisitasCompletasScreenState extends State<VisitasCompletasScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Detalles de Visita #${visita.id}'),
+          title: Text('Detalles de ${visita.numeroVisitaUsuario != null ? "Visita #${visita.numeroVisitaUsuario}" : "Visita #${visita.id}"}'),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

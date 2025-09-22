@@ -190,6 +190,9 @@ class VisitaCompletaPAE(Base):
     # caso_atencion_prioritaria = Column(String, nullable=True)  # No existe en la tabla real
     observaciones = Column(Text, nullable=True)  # Cambio de observaciones_generales a observaciones
     
+    # Contador de visitas por usuario
+    numero_visita_usuario = Column(Integer, nullable=True)
+    
     # Propiedad para compatibilidad con código existente
     @property
     def caso_atencion_prioritaria(self):

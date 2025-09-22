@@ -11,6 +11,7 @@ import 'package:frontend_visitas/utils/modern_colors.dart';
 import 'package:frontend_visitas/utils/modern_typography.dart';
 import 'package:frontend_visitas/providers/theme_provider.dart';
 import 'package:frontend_visitas/theme/app_theme.dart';
+import 'package:frontend_visitas/services/error_handler_service.dart';
 
 enum KPIStatus { good, warning, critical }
 
@@ -112,8 +113,10 @@ class _AdminDashboardProfessionalState extends State<AdminDashboardProfessional>
         throw Exception('Error ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
-      if (e.toString().contains('401') || e.toString().contains('No hay token')) {
-        await _cerrarSesion();
+      if (e.toString().contains('UNAUTHORIZED') || e.toString().contains('401') || e.toString().contains('No hay token')) {
+        if (mounted) {
+          await ErrorHandlerService.handleUnauthorizedError(context);
+        }
         return;
       }
       setState(() {
@@ -135,30 +138,7 @@ class _AdminDashboardProfessionalState extends State<AdminDashboardProfessional>
   }
 
   Future<void> _cerrarSesion() async {
-    try {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sesión expirada. Redirigiendo al login...'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-      await Future.delayed(const Duration(seconds: 2));
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('token');
-      await prefs.remove('user_id');
-      await prefs.remove('user_role');
-
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
-      }
-    }
+    await ErrorHandlerService.processLogout(context);
   }
 
   @override

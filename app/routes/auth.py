@@ -75,25 +75,25 @@ def _validar_seguridad_contrasena(contrasena: str) -> str:
     return None
 
 def _crear_token_acceso(usuario: models.Usuario) -> str:
-    """Crea un token de acceso con fecha_expiracionción corta (15 min)"""
-    fecha_expiraciontion = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    """Crea un token de acceso con expiración corta (15 min)"""
+    fecha_expiracion = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token_data = {
         "sub": usuario.correo,
         "rol": usuario.rol.nombre,
         "id": usuario.id,
         "type": "access",
-        "exp": fecha_expiraciontion
+        "exp": fecha_expiracion
     }
     return jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
 
 def _crear_refresh_token(usuario: models.Usuario) -> str:
-    """Crea un refresh token con fecha_expiracionción larga (7 días)"""
-    fecha_expiraciontion = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    """Crea un refresh token con expiración larga (7 días)"""
+    fecha_expiracion = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     token_data = {
         "sub": usuario.correo,
         "id": usuario.id,
         "type": "refresh",
-        "exp": fecha_expiraciontion
+        "exp": fecha_expiracion
     }
     return jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -106,7 +106,7 @@ def _obtener_usuario_por_token(token: str, db: Session) -> models.Usuario:
         if correo is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido (sin 'sub')")
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido o fecha_expiraciondo")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido o expirado")
 
     usuario = db.query(models.Usuario).filter(models.Usuario.correo == correo).first()
     if usuario is None:
@@ -327,7 +327,7 @@ def refresh_token(refresh_data: dict, db: Session = Depends(get_db)):
         }
         
     except JWTError:
-        raise HTTPException(status_code=401, detail="Refresh token inválido o fecha_expiraciondo")
+        raise HTTPException(status_code=401, detail="Refresh token inválido o expirado")
 
 @router.get("/me", response_model=schemas.UsuarioOut)
 def read_users_me(usuario: models.Usuario = Depends(obtener_usuario_actual)):
@@ -432,9 +432,9 @@ def verificar_codigo(datos: dict, db: Session = Depends(get_db)):
         if not codigo_recuperacion:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Código de verificación incorrecto")
         
-        # Verificar si el código ha fecha_expiraciondo
+        # Verificar si el código ha expirado
         if datetime.utcnow() > codigo_recuperacion.fecha_expiracion:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código de verificación ha fecha_expiraciondo. Solicita uno nuevo")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código de verificación ha expirado. Solicita uno nuevo")
         
         # Verificar intentos
         if codigo_recuperacion.intentos >= 3:
@@ -487,9 +487,9 @@ def cambiar_contrasena_recuperacion(datos: dict, db: Session = Depends(get_db)):
         if not codigo_recuperacion:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Código de verificación incorrecto")
         
-        # Verificar si el código ha fecha_expiraciondo
+        # Verificar si el código ha expirado
         if datetime.utcnow() > codigo_recuperacion.fecha_expiracion:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código de verificación ha fecha_expiraciondo. Solicita uno nuevo")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código de verificación ha expirado. Solicita uno nuevo")
         
         # Verificar si ya fue usado
         if codigo_recuperacion.usado:

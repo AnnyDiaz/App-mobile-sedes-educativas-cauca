@@ -22,6 +22,8 @@ class ReporteRequest(BaseModel):
     institucion_id: Optional[int] = None
     estado: Optional[str] = None  # "pendiente", "completada", "cancelada"
     busqueda: Optional[str] = None  # Término de búsqueda general
+    contrato: Optional[str] = None  # Búsqueda específica por contrato
+    operador: Optional[str] = None  # Búsqueda específica por operador
 
 @router.post("/generar")
 def generar_reporte(
@@ -95,13 +97,23 @@ def generar_reporte(
         if request.estado:
             query = query.filter(models.VisitaCompletaPAE.estado == request.estado)
         
+        # Aplicar búsqueda específica por contrato
+        if request.contrato:
+            termino_contrato = f"%{request.contrato}%"
+            query = query.filter(models.VisitaCompletaPAE.contrato.ilike(termino_contrato))
+            print(f"🔍 Filtro contrato aplicado: '{request.contrato}'")
+        
+        # Aplicar búsqueda específica por operador
+        if request.operador:
+            termino_operador = f"%{request.operador}%"
+            query = query.filter(models.VisitaCompletaPAE.operador.ilike(termino_operador))
+            print(f"🔍 Filtro operador aplicado: '{request.operador}'")
+        
         # Aplicar búsqueda general si se proporciona
         if request.busqueda:
             termino_busqueda = f"%{request.busqueda}%"
             query = query.filter(
                 or_(
-                    models.VisitaCompletaPAE.contrato.ilike(termino_busqueda),
-                    models.VisitaCompletaPAE.operador.ilike(termino_busqueda),
                     models.VisitaCompletaPAE.observaciones.ilike(termino_busqueda),
                     # Buscar en relaciones
                     models.VisitaCompletaPAE.municipio.has(models.Municipio.nombre.ilike(termino_busqueda)),
@@ -110,7 +122,7 @@ def generar_reporte(
                     models.VisitaCompletaPAE.profesional.has(models.Usuario.nombre.ilike(termino_busqueda)),
                 )
             )
-            print(f"🔍 Búsqueda aplicada: '{request.busqueda}'")
+            print(f"🔍 Búsqueda general aplicada: '{request.busqueda}'")
         
         # Ejecutar la consulta
         visitas = query.order_by(models.VisitaCompletaPAE.fecha_creacion.desc()).all()

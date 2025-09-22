@@ -615,7 +615,13 @@ class _AdminUserManagementEnhancedState extends State<AdminUserManagementEnhance
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[600]),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
         ],
       ),
     );

@@ -306,6 +306,7 @@ class VisitaCompletaPAEOut(BaseModel):
     fecha_creacion: datetime
     estado: str
     observaciones: Optional[str]
+    numero_visita_usuario: Optional[int]
     
     # Información relacionada
     municipio: MunicipioOut

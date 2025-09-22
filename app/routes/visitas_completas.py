@@ -167,6 +167,13 @@ def crear_visita_completa_pae(
         if not profesional:
             raise HTTPException(status_code=400, detail="Profesional no encontrado")
 
+        # Calcular el número de visita para este usuario
+        # Contar visitas existentes del usuario + 1
+        visitas_usuario_count = db.query(models.VisitaCompletaPAE).filter(
+            models.VisitaCompletaPAE.profesional_id == datos.profesional_id
+        ).count()
+        numero_visita_usuario = visitas_usuario_count + 1
+
         # Crear la visita completa
         visita_completa = models.VisitaCompletaPAE(
             fecha_visita=datos.fecha_visita,
@@ -178,7 +185,8 @@ def crear_visita_completa_pae(
             sede_id=datos.sede_id,
             profesional_id=datos.profesional_id,
             observaciones=datos.observaciones,
-            estado="completada"  # Se marca como completada inmediatamente
+            estado="completada",  # Se marca como completada inmediatamente
+            numero_visita_usuario=numero_visita_usuario
         )
         
         db.add(visita_completa)

@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend_visitas/config.dart';
 import 'package:frontend_visitas/widgets/semaforo_progreso_widget.dart';
+import 'package:frontend_visitas/widgets/semaforo_visitas_masivas.dart';
+import 'package:frontend_visitas/widgets/selector_cascada_sedes.dart';
 // Removed table_calendar import - calendar not needed for mass scheduling
 
 class AdminMassSchedulingScreen extends StatefulWidget {
@@ -20,6 +22,8 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
   // Data
   List<Map<String, dynamic>> _visitadores = [];
   List<Map<String, dynamic>> _sedes = [];
+  List<Map<String, dynamic>> _municipios = [];
+  List<Map<String, dynamic>> _instituciones = [];
   List<Map<String, dynamic>> _disponibilidad = [];
   
   // Form variables
@@ -62,6 +66,8 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
       await Future.wait([
         _cargarVisitadores(),
         _cargarSedes(),
+        _cargarMunicipios(),
+        _cargarInstituciones(),
       ]);
     } catch (e) {
       setState(() {
@@ -112,6 +118,46 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
       final data = jsonDecode(response.body);
       setState(() {
         _sedes = List<Map<String, dynamic>>.from(data);
+      });
+    }
+  }
+
+  Future<void> _cargarMunicipios() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/municipios'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _municipios = List<Map<String, dynamic>>.from(data);
+      });
+    }
+  }
+
+  Future<void> _cargarInstituciones() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/instituciones'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _instituciones = List<Map<String, dynamic>>.from(data);
       });
     }
   }
@@ -212,7 +258,6 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
         'fecha_inicio': _fechaInicio!.toIso8601String(),
         'fecha_fin': _fechaFin!.toIso8601String(),
         'tipo_visita': _tipoVisita,
-        'distribucion': _distribucion,
       };
 
       setState(() {
@@ -251,6 +296,12 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
         setState(() {
           _mostrarSemaforo = false;
         });
+
+        // Redirigir al dashboard principal después de un breve delay
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/admin_dashboard');
+        }
       } else {
         throw Exception('Error ${response.statusCode}: ${response.body}');
       }
@@ -391,14 +442,35 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
           ),
           SizedBox(height: 16),
           
+          
           // Tipo de visita
           Card(
+            color: _getColorContenedor(_getEstadoCampo('tipoVisita')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('tipoVisita')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Tipo de Visita', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Text('Tipo de Visita', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('tipoVisita') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('tipoVisita')),
+                        size: 20,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: _tipoVisita,
@@ -415,19 +487,43 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
           
           // Fechas
           Card(
+            color: _getColorContenedor(_getEstadoCampo('fechas')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('fechas')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Rango de Fechas', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Text('Rango de Fechas', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('fechas') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('fechas')),
+                        size: 20,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
                         child: Column(
                           children: [
-                            Text('Fecha Inicio'),
+                            Text(
+                              'Fecha Inicio',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                             TextButton(
                               onPressed: () async {
                                 final fecha = await showDatePicker(
@@ -478,13 +574,33 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
           
           // Visitadores
           Card(
+            color: _getColorContenedor(_getEstadoCampo('visitadores')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('visitadores')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Visitadores (${_visitadoresSeleccionados.length} seleccionados)', 
-                       style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Text('Visitadores (${_visitadoresSeleccionados.length} seleccionados)', 
+                           style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('visitadores') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('visitadores')),
+                        size: 20,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 8),
                   Container(
                     height: 200,
@@ -523,8 +639,16 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
             ),
           ),
           
-          // Sedes
+          // Selector en cascada de sedes
           Card(
+            color: _getColorContenedor(_getEstadoCampo('sedes')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('sedes')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
@@ -532,121 +656,52 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: Text('Sedes Educativas (${_sedesSeleccionadas.length} seleccionadas)', 
-                             style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Sedes Educativas (${_sedesSeleccionadas.length} seleccionadas)', 
+                           style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('sedes') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('sedes')),
+                        size: 20,
                       ),
-                      if (_visitadoresSeleccionados.isNotEmpty)
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Filtradas por visitadores',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
-                  SizedBox(height: 8),
-                  Container(
-                    height: 200,
-                    child: ListView.builder(
-                      itemCount: _getSedesFiltradas().length,
-                      itemBuilder: (context, index) {
-                        final sede = _getSedesFiltradas()[index];
-                        final isSelected = _sedesSeleccionadas.contains(sede['id']);
-                        return CheckboxListTile(
-                          value: isSelected,
-                          onChanged: (selected) {
-                            setState(() {
-                              if (selected == true) {
-                                _sedesSeleccionadas.add(sede['id']);
-                              } else {
-                                _sedesSeleccionadas.remove(sede['id']);
-                              }
-                            });
-                          },
-                          title: Text(sede['nombre']),
-                          subtitle: Text(sede['direccion'] ?? 'Sin dirección'),
-                        );
-                      },
-                    ),
+                  SizedBox(height: 16),
+                  SelectorCascadaSedes(
+                    municipios: _municipios,
+                    instituciones: _instituciones,
+                    sedes: _sedes,
+                    sedesSeleccionadas: _sedesSeleccionadas,
+                    onSedesChanged: (sedes) {
+                      setState(() {
+                        _sedesSeleccionadas = sedes;
+                      });
+                    },
                   ),
-                  if (_getSedesFiltradas().isEmpty && _visitadoresSeleccionados.isNotEmpty)
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Icon(Icons.info_outline, color: Colors.orange, size: 32),
-                          SizedBox(height: 8),
-                          Text(
-                            'No hay sedes disponibles para los visitadores seleccionados',
-                            style: TextStyle(color: Colors.orange[700]),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Selecciona visitadores de diferentes municipios para ver más opciones',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ),
           ),
           
-          // Distribución
-          Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Tipo de Distribución', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  RadioListTile<String>(
-                    value: 'automatica',
-                    groupValue: _distribucion,
-                    onChanged: (value) => setState(() => _distribucion = value!),
-                    title: Text('Automática'),
-                    subtitle: Text('El sistema distribuye equitativamente'),
-                  ),
-                  RadioListTile<String>(
-                    value: 'equilibrada',
-                    groupValue: _distribucion,
-                    onChanged: (value) => setState(() => _distribucion = value!),
-                    title: Text('Equilibrada'),
-                    subtitle: Text('Considera la carga actual de cada visitador'),
-                  ),
-                ],
-              ),
-            ),
-          ),
           
           SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _programarVisitasMasivo,
+              onPressed: _puedeProgramar() ? _programarVisitasMasivo : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: _puedeProgramar() ? Colors.deepPurple : Colors.grey,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
               ),
-              child: Text('Programar Visitas Masivamente', style: TextStyle(fontSize: 16)),
+              child: Text(
+                _puedeProgramar() 
+                  ? 'Programar Visitas Masivamente' 
+                  : 'Complete todos los campos obligatorios',
+                style: TextStyle(fontSize: 16),
+              ),
             ),
           ),
         ],
@@ -718,5 +773,55 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
         ),
       ],
     );
+  }
+
+  bool _puedeProgramar() {
+    return _sedesSeleccionadas.isNotEmpty &&
+           _visitadoresSeleccionados.isNotEmpty &&
+           _fechaInicio != null &&
+           _fechaFin != null &&
+           _tipoVisita.isNotEmpty;
+  }
+
+  // Función para determinar el estado de un campo
+  String _getEstadoCampo(String campo) {
+    switch (campo) {
+      case 'tipoVisita':
+        return _tipoVisita.isNotEmpty ? 'completado' : 'pendiente';
+      case 'fechas':
+        return (_fechaInicio != null && _fechaFin != null) ? 'completado' : 'pendiente';
+      case 'visitadores':
+        return _visitadoresSeleccionados.isNotEmpty ? 'completado' : 'pendiente';
+      case 'sedes':
+        return _sedesSeleccionadas.isNotEmpty ? 'completado' : 'pendiente';
+      default:
+        return 'pendiente';
+    }
+  }
+
+  // Función para obtener el color del contenedor según el estado
+  Color _getColorContenedor(String estado) {
+    switch (estado) {
+      case 'completado':
+        return Colors.green.withOpacity(0.1);
+      case 'en_curso':
+        return Colors.blue.withOpacity(0.1);
+      case 'pendiente':
+      default:
+        return Colors.grey.withOpacity(0.1);
+    }
+  }
+
+  // Función para obtener el color del borde según el estado
+  Color _getColorBorde(String estado) {
+    switch (estado) {
+      case 'completado':
+        return Colors.green;
+      case 'en_curso':
+        return Colors.blue;
+      case 'pendiente':
+      default:
+        return Colors.grey;
+    }
   }
 }
