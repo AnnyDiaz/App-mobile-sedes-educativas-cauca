@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_visitas/services/api_service.dart';
 import 'package:frontend_visitas/models/municipio.dart';
 import 'package:frontend_visitas/models/institucion.dart';
+import 'package:frontend_visitas/utils/permisos_helper.dart';
 
 class ReportesScreen extends StatefulWidget {
   const ReportesScreen({super.key});
@@ -14,15 +15,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
   final ApiService _apiService = ApiService();
   List<Municipio> _municipios = [];
   List<Institucion> _instituciones = [];
-  List<String> _tiposReporte = [
-    'Todas las visitas',
-    'Visitas por fecha',
-    'Visitas por municipio',
-    'Visitas por institución',
-    'Visitas por estado',
-    'Visitas por visitador',
-    'Resumen ejecutivo',
-  ];
+  List<String> _tiposReporte = [];
   
   String? _tipoReporteSeleccionado;
   String? _municipioSeleccionado;
@@ -31,6 +24,13 @@ class _ReportesScreenState extends State<ReportesScreen> {
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
   String _formatoSeleccionado = 'Excel';
+  String _terminoBusqueda = '';
+  String _contratoBusqueda = '';
+  String _operadorBusqueda = '';
+  
+  // Controllers para los campos de búsqueda
+  final TextEditingController _contratoController = TextEditingController();
+  final TextEditingController _operadorController = TextEditingController();
   
   bool _isGenerando = false;
 
@@ -38,6 +38,14 @@ class _ReportesScreenState extends State<ReportesScreen> {
   void initState() {
     super.initState();
     _cargarDatos();
+    _cargarTiposReporteSegunRol();
+  }
+
+  @override
+  void dispose() {
+    _contratoController.dispose();
+    _operadorController.dispose();
+    super.dispose();
   }
 
   Future<void> _cargarDatos() async {
@@ -54,6 +62,57 @@ class _ReportesScreenState extends State<ReportesScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al cargar datos: $e')),
+      );
+    }
+  }
+
+  Future<void> _cargarTiposReporteSegunRol() async {
+    try {
+      final permisos = await PermisosHelper.getPermisos();
+      final esVisitador = permisos['es_visitador'] ?? false;
+      final esSupervisor = permisos['es_supervisor'] ?? false;
+      final esAdmin = permisos['es_administrador'] ?? false;
+
+      List<String> tiposDisponibles = [];
+
+      if (esVisitador) {
+        // Los visitadores solo pueden generar reportes de sus propias visitas
+        tiposDisponibles = [
+          'Mis visitas completadas',
+          'Mis visitas por fecha',
+          'Mis visitas por estado',
+          'Mi resumen de actividades',
+        ];
+      } else if (esSupervisor) {
+        // Los supervisores pueden ver reportes de su equipo
+        tiposDisponibles = [
+          'Visitas del equipo',
+          'Visitas por fecha',
+          'Visitas por municipio',
+          'Visitas por institución',
+          'Visitas por estado',
+          'Visitas por visitador',
+          'Resumen del equipo',
+        ];
+      } else if (esAdmin) {
+        // Los administradores pueden ver todos los reportes
+        tiposDisponibles = [
+          'Todas las visitas',
+          'Visitas por fecha',
+          'Visitas por municipio',
+          'Visitas por institución',
+          'Visitas por estado',
+          'Visitas por visitador',
+          'Resumen ejecutivo',
+        ];
+      }
+
+      setState(() {
+        _tiposReporte = tiposDisponibles;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar tipos de reporte: $e')),
       );
     }
   }
@@ -79,15 +138,32 @@ class _ReportesScreenState extends State<ReportesScreen> {
         'estado': _estadoSeleccionado,
         'fecha_inicio': _fechaInicio?.toIso8601String(),
         'fecha_fin': _fechaFin?.toIso8601String(),
+        'busqueda': _terminoBusqueda.isNotEmpty ? _terminoBusqueda : null, // Búsqueda general
+        'contrato': _contratoController.text.trim().isNotEmpty ? _contratoController.text.trim() : null, // Búsqueda por contrato
+        'operador': _operadorController.text.trim().isNotEmpty ? _operadorController.text.trim() : null, // Búsqueda por operador
       };
 
-      await _apiService.generarReporte(parametros);
+      final rutaArchivo = await _apiService.generarReporte(parametros);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Reporte ${_formatoSeleccionado} generado exitosamente'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('✅ Reporte ${_formatoSeleccionado} generado exitosamente'),
+                if (rutaArchivo != null) ...[
+                  SizedBox(height: 4),
+                  Text(
+                    '📁 Ubicación: $rutaArchivo',
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ],
+            ),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 5),
           ),
         );
       }
@@ -121,6 +197,8 @@ class _ReportesScreenState extends State<ReportesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildTipoReporte(),
+            const SizedBox(height: 24),
+            _buildCampoBusqueda(),
             const SizedBox(height: 24),
             _buildFiltros(),
             const SizedBox(height: 24),
@@ -482,6 +560,109 @@ const SizedBox(height: 10),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCampoBusqueda() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Buscador de Reportes',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Búsqueda por Contrato
+            TextFormField(
+              controller: _contratoController,
+              decoration: InputDecoration(
+                labelText: 'Buscar por Contrato',
+                hintText: 'Escribe el nombre o número del contrato...',
+                prefixIcon: Icon(Icons.search, color: Colors.blue[600]),
+                suffixIcon: Icon(Icons.business, color: Colors.grey[400]),
+                border: OutlineInputBorder(),
+                suffix: _contratoController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          _contratoController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+              ),
+              onChanged: (value) {
+                setState(() {});
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Búsqueda por Operador
+            TextFormField(
+              controller: _operadorController,
+              decoration: InputDecoration(
+                labelText: 'Buscar por Operador',
+                hintText: 'Escribe el nombre del operador...',
+                prefixIcon: Icon(Icons.search, color: Colors.blue[600]),
+                suffixIcon: Icon(Icons.person, color: Colors.grey[400]),
+                border: OutlineInputBorder(),
+                suffix: _operadorController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          _operadorController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+              ),
+              onChanged: (value) {
+                setState(() {});
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Búsqueda General (opcional)
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Búsqueda General (Opcional)',
+                hintText: 'Buscar por visitador, institución, municipio, etc.',
+                prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                border: OutlineInputBorder(),
+                suffix: _terminoBusqueda.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _terminoBusqueda = '';
+                          });
+                        },
+                      )
+                    : null,
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _terminoBusqueda = value;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Los campos de contrato y operador permiten búsqueda específica. El campo general busca en otros campos.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

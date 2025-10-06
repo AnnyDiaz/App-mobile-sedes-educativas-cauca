@@ -105,8 +105,8 @@ class _AuthScreenState extends State<AuthScreen>
     if (!password.contains(RegExp(r'[0-9]'))) {
       return 'Debe contener al menos un número';
     }
-    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]+'))) {
-      return 'Debe contener al menos un carácter especial';
+    if (!password.contains(RegExp(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]'))) {
+      return 'Debe contener al menos un carácter especial (!@#\$%^&*()_+-=[]{}|;:,.<>?)';
     }
     return null;
   }

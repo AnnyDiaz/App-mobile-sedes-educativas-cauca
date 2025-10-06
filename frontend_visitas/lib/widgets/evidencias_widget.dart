@@ -11,6 +11,7 @@ class EvidenciasWidget extends StatefulWidget {
   final Function(Evidencia) onEvidenciaAgregada;
   final Function(Evidencia) onEvidenciaEliminada;
   final bool esEditable;
+  final bool esParaFirma; // Nuevo parámetro para indicar si es para firma
 
   const EvidenciasWidget({
     Key? key,
@@ -19,6 +20,7 @@ class EvidenciasWidget extends StatefulWidget {
     required this.onEvidenciaAgregada,
     required this.onEvidenciaEliminada,
     this.esEditable = true,
+    this.esParaFirma = false, // Por defecto no es para firma
   }) : super(key: key);
 
   @override
@@ -37,12 +39,16 @@ class _EvidenciasWidgetState extends State<EvidenciasWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Evidencias',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+            Expanded(
+              child: Text(
+                'Evidencias',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
             if (widget.evidencias.isNotEmpty)
@@ -58,12 +64,16 @@ class _EvidenciasWidgetState extends State<EvidenciasWidget> {
                   children: [
                     Icon(Icons.attach_file, size: 14, color: Colors.blue.shade700),
                     const SizedBox(width: 4),
-                    Text(
-                      '${widget.evidencias.length}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue.shade700,
+                    Flexible(
+                      child: Text(
+                        '${widget.evidencias.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue.shade700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   ],
@@ -123,6 +133,7 @@ class _EvidenciasWidgetState extends State<EvidenciasWidget> {
             onTomarFoto: _tomarFoto,
             onSeleccionarGaleria: _seleccionarDeGaleria,
             onSeleccionarArchivo: _seleccionarArchivo,
+            esParaFirma: widget.esParaFirma,
           ),
       ],
     );
@@ -152,12 +163,16 @@ class _EvidenciasWidgetState extends State<EvidenciasWidget> {
                 style: const TextStyle(fontSize: 12),
               ),
               const SizedBox(width: 2),
-              Text(
-                '${entry.value}',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: Color(_getColorTipo(entry.key)),
+              Flexible(
+                child: Text(
+                  '${entry.value}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(_getColorTipo(entry.key)),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
@@ -549,6 +564,8 @@ class _EvidenciaPreview extends StatelessWidget {
             child: Text(
               value,
               style: TextStyle(color: Colors.grey.shade800),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -585,12 +602,14 @@ class _BotonAgregarEvidencia extends StatelessWidget {
   final VoidCallback onTomarFoto;
   final VoidCallback onSeleccionarGaleria;
   final VoidCallback onSeleccionarArchivo;
+  final bool esParaFirma;
 
   const _BotonAgregarEvidencia({
     required this.onEvidenciaSeleccionada,
     required this.onTomarFoto,
     required this.onSeleccionarGaleria,
     required this.onSeleccionarArchivo,
+    this.esParaFirma = false,
   });
 
   @override
@@ -610,7 +629,7 @@ class _BotonAgregarEvidencia extends StatelessWidget {
             Icon(Icons.add_circle_outline, size: 18, color: Colors.green.shade700),
             const SizedBox(width: 8),
             Text(
-              'Subir evidencia',
+              esParaFirma ? 'Tomar foto de firma' : 'Subir evidencia',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -622,7 +641,20 @@ class _BotonAgregarEvidencia extends StatelessWidget {
           ],
         ),
       ),
-      itemBuilder: (context) => [
+      itemBuilder: (context) => esParaFirma ? [
+        // Solo opción de cámara para firmas - eliminada opción de galería
+        const PopupMenuItem(
+          value: 'camara',
+          child: Row(
+            children: [
+              Icon(Icons.camera_alt, color: Colors.blue),
+              SizedBox(width: 12),
+              Text('Tomar foto de firma con cámara'),
+            ],
+          ),
+        ),
+      ] : [
+        // Opciones completas para evidencias normales
         const PopupMenuItem(
           value: 'camara',
           child: Row(

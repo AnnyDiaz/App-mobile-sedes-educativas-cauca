@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
+import 'package:frontend_visitas/services/error_handler_service.dart';
 
 class CrearCronogramaScreen extends StatefulWidget {
   final dynamic? visitaExistente; // Visita completa PAE existente para editar
@@ -100,35 +101,51 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
     _imagenAdicional = null;
   }
 
-  Future<void> _verificarPermisosGPS() async {
+  Future<bool> _verificarPermisosGPS() async {
+    // Verificar si los servicios de ubicación están habilitados
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       setState(() {
-        _errorGPS = 'Los servicios de ubicación están deshabilitados';
+        _errorGPS = 'Los servicios de ubicación están deshabilitados. Por favor, habilítalos en la configuración del dispositivo.';
       });
-      return;
+      return false;
     }
 
+    // Verificar permisos actuales
     LocationPermission permission = await Geolocator.checkPermission();
+    
     if (permission == LocationPermission.denied) {
+      // Solicitar permisos explícitamente
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         setState(() {
-          _errorGPS = 'Permisos de ubicación denegados';
+          _errorGPS = 'Los permisos de ubicación son obligatorios para crear visitas. Por favor, permite el acceso a la ubicación.';
         });
-        return;
+        return false;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       setState(() {
-        _errorGPS = 'Permisos de ubicación denegados permanentemente';
+        _errorGPS = 'Los permisos de ubicación están permanentemente denegados. Ve a configuración para habilitarlos.';
       });
-      return;
+      return false;
     }
+
+    // Si llegamos aquí, los permisos están otorgados
+    setState(() {
+      _errorGPS = null;
+    });
+    return true;
   }
 
   Future<void> _capturarGPS() async {
+    // Verificar permisos antes de intentar capturar GPS
+    final permisosOtorgados = await _verificarPermisosGPS();
+    if (!permisosOtorgados) {
+      return; // No continuar si no hay permisos
+    }
+
     setState(() {
       _isLoadingGPS = true;
       _errorGPS = null;
@@ -408,7 +425,7 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.visitaExistente != null ? 'Editar Cronograma PAE' : 'Crear Cronograma PAE 2025'),
+        title: Text(widget.visitaExistente != null ? 'Editar Visita PAE' : 'Crear Visita PAE 2025'),
         centerTitle: true,
         backgroundColor: Colors.blue[600],
         foregroundColor: Colors.white,
@@ -1585,7 +1602,7 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
                     Icon(Icons.photo_camera, color: Colors.blue[700], size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Foto/Evidencia Adicional',
+                      'Foto de Firma Adicional',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -1596,7 +1613,7 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Sube una foto o evidencia adicional relacionada con la visita (opcional)',
+                  'Toma una foto de la firma o evidencia adicional relacionada con la visita (opcional)',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.blue[600],
@@ -1609,8 +1626,8 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
                   children: [
                     ElevatedButton.icon(
                       onPressed: _seleccionarImagenAdicional,
-                      icon: Icon(Icons.add_a_photo, size: 18),
-                      label: Text('Seleccionar Imagen'),
+                      icon: Icon(Icons.camera_alt, size: 18),
+                      label: Text('Tomar Foto'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[600],
                         foregroundColor: Colors.white,
@@ -1745,18 +1762,6 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
           'Revise todos los datos antes de guardar. Presione "GUARDAR CRONOGRAMA" para finalizar.',
           style: TextStyle(fontSize: 14, color: Colors.grey),
         ),
-          
-        // Botón de depuración temporal
-        const SizedBox(height: 20),
-        ElevatedButton.icon(
-          onPressed: _mostrarEstadoDepuracion,
-          icon: const Icon(Icons.bug_report),
-          label: const Text('🐛 DEPURAR ESTADO'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            foregroundColor: Colors.white,
-          ),
-        ),
       ],
     );
   }
@@ -1778,6 +1783,8 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
             child: Text(
               valor,
               style: const TextStyle(color: Colors.grey),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -2053,92 +2060,6 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
     return 'IDs: ${ids.join(', ')}';
   }
 
-  /// Función de depuración para mostrar el estado actual
-  void _mostrarEstadoDepuracion() {
-    String estado = '''
-🔍 === ESTADO ACTUAL DEL CRONOGRAMA ===
-
-📅 Fecha visita: ${_fechaVisita?.toIso8601String() ?? 'NULL'}
-⏰ Hora visita: ${_horaVisita?.toString() ?? 'NULL'}
-📋 Contrato: "$_contrato"
-👤 Operador: "$_operador"
-
-🏘️ Municipio ID: $_municipioId
-🏫 Institución ID: $_institucionId
-📍 Sede ID: $_sedeId
-
-⚡ Caso atención: $_casoAtencionPrioritaria
-👤 Profesional ID: $_profesionalId
-
-📋 Checklist cargado: ${_checklist != null}
-📝 Respuestas checklist: ${_respuestasChecklist.length}
-📸 Evidencias: ${_evidenciasChecklist.values.fold(0, (sum, list) => sum + list.length)}
-
-🔍 === VALIDACIONES ===
-✅ Formulario válido: ${_formKey.currentState?.validate() ?? false}
-✅ Fecha válida: ${_fechaVisita != null}
-✅ Hora válida: ${_horaVisita != null}
-✅ Contrato válido: ${_contrato.trim().isNotEmpty}
-✅ Operador válido: ${_operador.trim().isNotEmpty}
-✅ Municipio válido: ${_municipioId != null && _municipioId! >= 2}
-✅ Institución válida: ${_institucionId != null && _institucionId! >= 29}
-✅ Sede válida: ${_sedeId != null && _sedeId! >= 3}
-✅ Caso válido: ${_casoAtencionPrioritaria != null}
-✅ Profesional válido: ${_profesionalId != null}
-✅ Checklist válido: ${_checklist != null}
-✅ Respuestas válidas: ${_respuestasChecklist.isNotEmpty}
-
-🔍 === PROBLEMAS DETECTADOS ===
-''';
-
-    // Identificar problemas específicos
-    List<String> problemas = [];
-    
-    if (_fechaVisita == null) problemas.add('❌ Fecha de visita es NULL');
-    if (_horaVisita == null) problemas.add('❌ Hora de visita es NULL');
-    if (_contrato.trim().isEmpty) problemas.add('❌ Contrato está vacío');
-    if (_operador.trim().isEmpty) problemas.add('❌ Operador está vacío');
-    if (_municipioId == null) problemas.add('❌ Municipio ID es NULL');
-    if (_institucionId == null) problemas.add('❌ Institución ID es NULL');
-    if (_sedeId == null) problemas.add('❌ Sede ID es NULL');
-    if (_casoAtencionPrioritaria == null) problemas.add('❌ Caso de atención es NULL');
-    if (_profesionalId == null) problemas.add('❌ Profesional ID es NULL');
-    if (_checklist == null) problemas.add('❌ Checklist no está cargado');
-    if (_respuestasChecklist.isEmpty) problemas.add('❌ No hay respuestas en el checklist');
-    
-    if (_municipioId != null && _municipioId! < 2) {
-      problemas.add('❌ Municipio ID $_municipioId es menor que 2');
-    }
-    if (_institucionId != null && _institucionId! < 29) {
-      problemas.add('❌ Institución ID $_institucionId es menor que 29');
-    }
-    if (_sedeId != null && _sedeId! < 3) {
-      problemas.add('❌ Sede ID $_sedeId es menor que 3');
-    }
-    
-    if (problemas.isEmpty) {
-      problemas.add('✅ No se detectaron problemas');
-    }
-    
-    estado += problemas.join('\n');
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('🐛 Estado de Depuración'),
-        content: SingleChildScrollView(
-          child: Text(estado, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _mostrarError(String mensaje) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -2156,21 +2077,20 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
   }
 
   Future<void> _guardarVisita() async {
-    print('🚀 === INICIANDO GUARDADO DE CRONOGRAMA ===');
-    print('🔍 Validando formulario...');
-    
     if (!_formKey.currentState!.validate()) {
-      print('❌ Validación del formulario falló');
       return;
     }
     
-    print('🔍 Validando campos...');
     if (!_validarCampos()) {
-      print('❌ Validación de campos falló');
       return;
     }
     
-    print('✅ Validaciones exitosas, procediendo con el guardado...');
+    // Verificar permisos de ubicación antes de continuar
+    final permisosOtorgados = await _verificarPermisosGPS();
+    if (!permisosOtorgados) {
+      _mostrarError('Los permisos de ubicación son obligatorios para crear visitas. Por favor, permite el acceso a la ubicación.');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -2197,8 +2117,6 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
       final connectivityResult = await Connectivity().checkConnectivity();
 
       if (connectivityResult.contains(ConnectivityResult.none)) {
-        print("🔌 Sin conexión. Guardando localmente...");
-        
         // Guardar visita localmente
         final visitaId = await LocalDB.guardarVisitaLocal(data);
         
@@ -2218,12 +2136,9 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
         }
       } else {
         try {
-          print("☁️ Conexión detectada. Enviando al servidor...");
-          
           // Verificar autenticación antes de enviar
           final isAuthenticated = await ApiService().isAuthenticated();
           if (!isAuthenticated) {
-            print("❌ Usuario no autenticado. Redirigiendo al login...");
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -2233,7 +2148,7 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
                 ),
               );
               // Redirigir al login en lugar de cerrar la app
-              Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+              Navigator.of(context).pushReplacementNamed('/auth');
             }
             return;
           }
@@ -2258,9 +2173,8 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
             respuestasChecklist: _respuestasChecklist,
           );
           
-          // NUEVO: Actualizar el estado a completada después de crear la visita
+          // Actualizar el estado a completada después de crear la visita
           if (visitaCreada) {
-            print('🔄 Actualizando estado de la visita a completada...');
             // Buscar la visita recién creada por contrato y actualizar su estado
             final visitas = await ApiService().getVisitasCompletas();
             final visitasPendientes = visitas.where(
@@ -2270,11 +2184,7 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
             if (visitasPendientes.isNotEmpty) {
               final visitaRecienCreada = visitasPendientes.first;
               final visitaId = visitaRecienCreada.id;
-              print('✅ Visita encontrada con ID: $visitaId, actualizando a completada...');
               await ApiService().actualizarEstadoVisita(visitaId, 'completada');
-              print('✅ Estado de visita actualizado a completada');
-            } else {
-              print('⚠️ No se pudo encontrar la visita recién creada para actualizar estado');
             }
           }
           
@@ -2288,31 +2198,18 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
             );
             
             // NUEVO: Refrescar el dashboard después de guardar
-            print('🔄 Refrescando dashboard después de guardar visita...');
             await _refrescarDashboard();
           }
         } catch (e) {
-          print("⚠️ Error al enviar al servidor: $e");
-          
           // Verificar si es un error de autenticación
-          if (e.toString().contains('401') || e.toString().contains('403') || e.toString().contains('Unauthorized')) {
-            print("❌ Error de autenticación detectado. Redirigiendo al login...");
+          if (e.toString().contains('UNAUTHORIZED') || e.toString().contains('401') || e.toString().contains('403') || e.toString().contains('Unauthorized')) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('❌ Sesión expirada. Por favor, inicia sesión nuevamente.'),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 4),
-                ),
-              );
-              // Redirigir al login en lugar de cerrar la app
-              Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+              await ErrorHandlerService.handleUnauthorizedError(context);
             }
             return;
           }
           
           // Para otros errores, guardar localmente como respaldo
-          print("💾 Guardando localmente como respaldo...");
           try {
             final visitaId = await LocalDB.guardarVisitaLocal(data);
             
@@ -2330,7 +2227,6 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
               );
             }
           } catch (localError) {
-            print("❌ Error al guardar localmente: $localError");
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -2344,56 +2240,38 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
         }
       }
     } catch (e) {
-      print("❌ Error inesperado en _guardarVisita: $e");
       _mostrarError('Error inesperado: $e');
     } finally {
       setState(() {
         _isLoading = false;
       });
-      
-      // NO cerrar la pantalla aquí - se cerrará desde _refrescarDashboard
-      // o desde el manejo de errores específicos
     }
   }
   
   /// Refresca el dashboard después de guardar una visita
   Future<void> _refrescarDashboard() async {
     try {
-      print('🔄 === INICIANDO REFRESH DEL DASHBOARD ===');
-      
       // Esperar más tiempo para que la sincronización del backend se complete
-      print('⏳ Esperando 5 segundos para sincronización del backend...');
       await Future.delayed(const Duration(milliseconds: 5000));
-      print('✅ Tiempo de espera completado');
       
       // Navegar de vuelta al dashboard con flag de refresh
       if (mounted) {
-        print('✅ Widget montado, navegando de vuelta al dashboard con flag de refresh');
         Navigator.pop(context, {'refresh': true});
-        print('✅ Navegación completada con flag de refresh');
-      } else {
-        print('⚠️ Widget no está montado, no se puede navegar');
       }
-      
-      print('✅ Dashboard marcado para refresh');
-      print('🏁 === REFRESH DEL DASHBOARD FINALIZADO ===');
     } catch (e) {
-      print('❌ Error al refrescar dashboard: $e');
-      print('❌ Stack trace: ${StackTrace.current}');
       // En caso de error, cerrar la pantalla de todas formas
       if (mounted) {
-        print('⚠️ Cerrando pantalla debido a error en refresh');
         Navigator.pop(context);
       }
     }
   }
 
-  /// Selecciona una imagen adicional para la visita
+  /// Toma una foto adicional para la visita
   Future<void> _seleccionarImagenAdicional() async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
+        source: ImageSource.camera,
         imageQuality: 80,
         maxWidth: 1024,
         maxHeight: 1024,
@@ -2404,10 +2282,8 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
         setState(() {
           _imagenAdicional = bytes;
         });
-        print('📸 Imagen adicional seleccionada: ${image.name}');
       }
     } catch (e) {
-      print('❌ Error al seleccionar imagen adicional: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -2424,6 +2300,5 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
     setState(() {
       _imagenAdicional = null;
     });
-    print('🗑️ Imagen adicional eliminada');
   }
 }

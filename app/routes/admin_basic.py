@@ -1369,6 +1369,77 @@ def generar_exportacion(
         print(f"❌ Error al generar exportación: {e}")
         raise HTTPException(status_code=400, detail=f"Error al generar exportación: {str(e)}")
 
+@router.get("/exportaciones/ubicacion-archivos")
+def obtener_ubicacion_archivos(
+    db: Session = Depends(get_db),
+    admin_user: models.Usuario = Depends(verificar_admin)
+):
+    """
+    Obtiene información sobre dónde se ubican los archivos para descarga.
+    """
+    try:
+        import os
+        
+        # Directorio base de archivos
+        media_dir = "media"
+        export_dir = os.path.join(media_dir, "exports")
+        
+        # Verificar si los directorios existen
+        directorios_info = {
+            "media": {
+                "ruta": os.path.abspath(media_dir),
+                "existe": os.path.exists(media_dir),
+                "descripcion": "Directorio principal de archivos multimedia"
+            },
+            "exports": {
+                "ruta": os.path.abspath(export_dir),
+                "existe": os.path.exists(export_dir),
+                "descripcion": "Archivos de exportación y reportes"
+            },
+            "firmas": {
+                "ruta": os.path.abspath(os.path.join(media_dir, "firmas")),
+                "existe": os.path.exists(os.path.join(media_dir, "firmas")),
+                "descripcion": "Firmas digitales capturadas"
+            },
+            "fotos": {
+                "ruta": os.path.abspath(os.path.join(media_dir, "fotos")),
+                "existe": os.path.exists(os.path.join(media_dir, "fotos")),
+                "descripcion": "Fotos de evidencias"
+            },
+            "pdfs": {
+                "ruta": os.path.abspath(os.path.join(media_dir, "pdfs")),
+                "existe": os.path.exists(os.path.join(media_dir, "pdfs")),
+                "descripcion": "Documentos PDF"
+            }
+        }
+        
+        # Contar archivos en cada directorio
+        for dir_name, info in directorios_info.items():
+            if info["existe"]:
+                try:
+                    archivos = os.listdir(info["ruta"])
+                    info["total_archivos"] = len(archivos)
+                    info["archivos_recientes"] = sorted(archivos, key=lambda x: os.path.getmtime(os.path.join(info["ruta"], x)), reverse=True)[:5]
+                except Exception as e:
+                    info["total_archivos"] = 0
+                    info["error"] = str(e)
+            else:
+                info["total_archivos"] = 0
+        
+        return {
+            "mensaje": "Información de ubicación de archivos",
+            "directorios": directorios_info,
+            "instrucciones": {
+                "acceso_web": "Los archivos se pueden descargar a través de los endpoints de la API",
+                "acceso_directo": "Los archivos también están disponibles directamente en el sistema de archivos",
+                "limpieza": "Se recomienda limpiar archivos antiguos periódicamente"
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error al obtener ubicación de archivos: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al obtener ubicación de archivos: {str(e)}")
+
 @router.get("/exportaciones/{export_id}/download")
 def descargar_exportacion(
     export_id: str,

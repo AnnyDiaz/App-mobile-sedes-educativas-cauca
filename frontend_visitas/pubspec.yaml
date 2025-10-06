@@ -35,6 +35,8 @@ dependencies:
   url_launcher: ^6.3.1
   provider: ^6.1.1
   package_info_plus: ^8.0.0
+  app_settings: ^5.1.1
+  
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +51,7 @@ flutter:
     - assets/images/logo.png
     - assets/images/portada.png
     - assets/images/portada1.png
+    - assets/images/logofup.png
 
 # Configuración para el ícono de la aplicación
 flutter_launcher_icons:

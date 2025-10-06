@@ -640,11 +640,15 @@ class _AdminNotificationsManagementState extends State<AdminNotificationsManagem
                       Text(
                         categoria['nombre'],
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                       SizedBox(height: 4),
                       Text(
                         categoria['descripcion'],
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       ),
                     ],
                   ),

@@ -164,53 +164,35 @@ class _CrearVisitaPAEScreenState extends State<CrearVisitaPAEScreen> {
   }
 
   Future<void> _guardarVisita() async {
-    print('🔍 DEBUG: Iniciando _guardarVisita');
-    
     // Validaciones
     if (_contratoController.text.isEmpty) {
-      print('❌ DEBUG: Contrato vacío');
       _mostrarError('Por favor ingrese el contrato');
       return;
     }
     if (_operadorController.text.isEmpty) {
-      print('❌ DEBUG: Operador vacío');
       _mostrarError('Por favor ingrese el operador');
       return;
     }
     if (_municipioSeleccionado == null) {
-      print('❌ DEBUG: Municipio no seleccionado');
       _mostrarError('Por favor seleccione un municipio');
       return;
     }
     if (_institucionSeleccionada == null) {
-      print('❌ DEBUG: Institución no seleccionada');
       _mostrarError('Por favor seleccione una institución');
       return;
     }
     if (_sedeSeleccionada == null) {
-      print('❌ DEBUG: Sede no seleccionada');
       _mostrarError('Por favor seleccione una sede');
       return;
     }
-
-    print('✅ DEBUG: Todas las validaciones pasaron');
-    print('📋 DEBUG: Contrato: ${_contratoController.text}');
-    print('📋 DEBUG: Operador: ${_operadorController.text}');
-    print('📋 DEBUG: Municipio: ${_municipioSeleccionado?.nombre}');
-    print('📋 DEBUG: Institución: ${_institucionSeleccionada?.nombre}');
-    print('📋 DEBUG: Sede: ${_sedeSeleccionada?.nombre}');
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      print('🔄 DEBUG: Simulando guardado...');
       // Aquí iría la lógica para guardar la visita PAE
-      // Por ahora solo mostramos un mensaje de éxito
       await Future.delayed(const Duration(seconds: 2)); // Simular guardado
-      
-      print('✅ DEBUG: Guardado simulado completado');
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -219,16 +201,13 @@ class _CrearVisitaPAEScreenState extends State<CrearVisitaPAEScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        print('🔙 DEBUG: Navegando de vuelta...');
         Navigator.of(context).pop();
       }
     } catch (e) {
-      print('❌ DEBUG: Error en guardado: $e');
       if (mounted) {
         _mostrarError('Error al guardar la visita: $e');
       }
     } finally {
-      print('🔄 DEBUG: Finalizando...');
       if (mounted) {
         setState(() {
           _isLoading = false;

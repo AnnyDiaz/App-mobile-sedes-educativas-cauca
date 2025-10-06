@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend_visitas/config.dart';
+import 'package:frontend_visitas/widgets/semaforo_progreso_widget.dart';
+import 'package:frontend_visitas/widgets/semaforo_visitas_masivas.dart';
+import 'package:frontend_visitas/widgets/selector_cascada_sedes.dart';
 // Removed table_calendar import - calendar not needed for mass scheduling
 
 class AdminMassSchedulingScreen extends StatefulWidget {
@@ -19,6 +22,8 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
   // Data
   List<Map<String, dynamic>> _visitadores = [];
   List<Map<String, dynamic>> _sedes = [];
+  List<Map<String, dynamic>> _municipios = [];
+  List<Map<String, dynamic>> _instituciones = [];
   List<Map<String, dynamic>> _disponibilidad = [];
   
   // Form variables
@@ -31,6 +36,12 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
   
   bool _isLoading = true;
   String _error = '';
+  
+  // Variables para el semáforo
+  EstadoSemaforo _estadoSemaforo = EstadoSemaforo.preparando;
+  String _mensajeSemaforo = 'Preparando programación masiva...';
+  double _progreso = 0.0;
+  bool _mostrarSemaforo = false;
 
   @override
   void initState() {
@@ -55,6 +66,8 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
       await Future.wait([
         _cargarVisitadores(),
         _cargarSedes(),
+        _cargarMunicipios(),
+        _cargarInstituciones(),
       ]);
     } catch (e) {
       setState(() {
@@ -109,6 +122,80 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
     }
   }
 
+  Future<void> _cargarMunicipios() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/municipios'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _municipios = List<Map<String, dynamic>>.from(data);
+      });
+    }
+  }
+
+  Future<void> _cargarInstituciones() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/instituciones'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _instituciones = List<Map<String, dynamic>>.from(data);
+      });
+    }
+  }
+
+  // Filtrar sedes basándose en el visitador seleccionado
+  List<Map<String, dynamic>> _getSedesFiltradas() {
+    if (_visitadoresSeleccionados.isEmpty) {
+      return _sedes; // Mostrar todas las sedes si no hay visitadores seleccionados
+    }
+
+    // Filtrar sedes que estén en el mismo municipio que los visitadores seleccionados
+    // Esto es una aproximación ya que no hay relación directa visitador-sede
+    List<Map<String, dynamic>> sedesFiltradas = [];
+    
+    for (var visitadorId in _visitadoresSeleccionados) {
+      final visitador = _visitadores.firstWhere(
+        (v) => v['id'] == visitadorId,
+        orElse: () => {},
+      );
+      
+      if (visitador.isNotEmpty && visitador['municipio_id'] != null) {
+        final municipioId = visitador['municipio_id'];
+        final sedesDelMunicipio = _sedes.where(
+          (sede) => sede['municipio_id'] == municipioId
+        ).toList();
+        
+        // Agregar sedes que no estén ya en la lista
+        for (var sede in sedesDelMunicipio) {
+          if (!sedesFiltradas.any((s) => s['id'] == sede['id'])) {
+            sedesFiltradas.add(sede);
+          }
+        }
+      }
+    }
+    
+    return sedesFiltradas.isNotEmpty ? sedesFiltradas : _sedes;
+  }
+
   Future<void> _cargarDisponibilidad() async {
     if (_fechaInicio == null || _fechaFin == null) return;
 
@@ -146,19 +233,38 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    final programacionData = {
-      'sedes_ids': _sedesSeleccionadas,
-      'visitadores_ids': _visitadoresSeleccionados,
-      'fecha_inicio': _fechaInicio!.toIso8601String(),
-      'fecha_fin': _fechaFin!.toIso8601String(),
-      'tipo_visita': _tipoVisita,
-      'distribucion': _distribucion,
-    };
+    // Mostrar semáforo
+    setState(() {
+      _mostrarSemaforo = true;
+      _estadoSemaforo = EstadoSemaforo.preparando;
+      _mensajeSemaforo = 'Preparando datos para programación masiva...';
+      _progreso = 0.0;
+    });
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      // Actualizar semáforo - procesando
+      setState(() {
+        _estadoSemaforo = EstadoSemaforo.procesando;
+        _mensajeSemaforo = 'Enviando datos al servidor...';
+        _progreso = 0.3;
+      });
+
+      final programacionData = {
+        'sedes_ids': _sedesSeleccionadas,
+        'visitadores_ids': _visitadoresSeleccionados,
+        'fecha_inicio': _fechaInicio!.toIso8601String(),
+        'fecha_fin': _fechaFin!.toIso8601String(),
+        'tipo_visita': _tipoVisita,
+      };
+
+      setState(() {
+        _mensajeSemaforo = 'Procesando programación masiva...';
+        _progreso = 0.6;
+      });
+
       final response = await http.post(
         Uri.parse('$baseUrl/api/admin/visitas/programar-masivo'),
         headers: {
@@ -168,17 +274,55 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
         body: jsonEncode(programacionData),
       );
 
+      setState(() {
+        _progreso = 0.9;
+      });
+
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
+        
+        // Completado exitosamente
+        setState(() {
+          _estadoSemaforo = EstadoSemaforo.completado;
+          _mensajeSemaforo = 'Programación masiva completada exitosamente';
+          _progreso = 1.0;
+        });
+
+        // Mostrar resultado después de un breve delay
+        await Future.delayed(const Duration(seconds: 2));
         _mostrarResultadoProgramacion(result);
-        // Calendar removed - no need to reload calendar data
+        
+        // Ocultar semáforo
+        setState(() {
+          _mostrarSemaforo = false;
+        });
+
+        // Redirigir al dashboard principal después de un breve delay
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/admin_dashboard');
+        }
       } else {
         throw Exception('Error ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
+      // Error en el proceso
+      setState(() {
+        _estadoSemaforo = EstadoSemaforo.error;
+        _mensajeSemaforo = 'Error en la programación masiva: $e';
+        _progreso = 0.0;
+      });
+      
+      // Mostrar error después de un breve delay
+      await Future.delayed(const Duration(seconds: 2));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
+      
+      // Ocultar semáforo después de mostrar error
+      setState(() {
+        _mostrarSemaforo = false;
+      });
     }
   }
 
@@ -231,31 +375,56 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
           ],
         ),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      SizedBox(height: 16),
-                      Text(_error, textAlign: TextAlign.center),
-                      SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _cargarDatos,
-                        child: Text('Reintentar'),
+      body: Stack(
+        children: [
+          _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : _error.isNotEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 64, color: Colors.red),
+                          SizedBox(height: 16),
+                          Text(_error, textAlign: TextAlign.center),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _cargarDatos,
+                            child: Text('Reintentar'),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildProgramarTab(),
-                    _buildDisponibilidadTab(),
-                  ],
+                    )
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildProgramarTab(),
+                        _buildDisponibilidadTab(),
+                      ],
+                    ),
+          
+          // Semáforo de progreso
+          if (_mostrarSemaforo)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: SemaforoProgresoWidget(
+                  estado: _estadoSemaforo,
+                  mensaje: _mensajeSemaforo,
+                  progreso: _progreso,
+                  onReintentar: _estadoSemaforo == EstadoSemaforo.error 
+                      ? () {
+                          setState(() {
+                            _mostrarSemaforo = false;
+                          });
+                          _programarVisitasMasivo();
+                        }
+                      : null,
                 ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -273,14 +442,35 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
           ),
           SizedBox(height: 16),
           
+          
           // Tipo de visita
           Card(
+            color: _getColorContenedor(_getEstadoCampo('tipoVisita')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('tipoVisita')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Tipo de Visita', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Text('Tipo de Visita', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('tipoVisita') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('tipoVisita')),
+                        size: 20,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: _tipoVisita,
@@ -297,19 +487,43 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
           
           // Fechas
           Card(
+            color: _getColorContenedor(_getEstadoCampo('fechas')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('fechas')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Rango de Fechas', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Text('Rango de Fechas', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('fechas') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('fechas')),
+                        size: 20,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
                         child: Column(
                           children: [
-                            Text('Fecha Inicio'),
+                            Text(
+                              'Fecha Inicio',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                             TextButton(
                               onPressed: () async {
                                 final fecha = await showDatePicker(
@@ -360,13 +574,33 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
           
           // Visitadores
           Card(
+            color: _getColorContenedor(_getEstadoCampo('visitadores')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('visitadores')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Visitadores (${_visitadoresSeleccionados.length} seleccionados)', 
-                       style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Text('Visitadores (${_visitadoresSeleccionados.length} seleccionados)', 
+                           style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('visitadores') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('visitadores')),
+                        size: 20,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 8),
                   Container(
                     height: 200,
@@ -383,6 +617,14 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
                                 _visitadoresSeleccionados.add(visitador['id']);
                               } else {
                                 _visitadoresSeleccionados.remove(visitador['id']);
+                                // Limpiar sedes seleccionadas que ya no están disponibles
+                                _sedesSeleccionadas.removeWhere((sedeId) {
+                                  final sede = _sedes.firstWhere(
+                                    (s) => s['id'] == sedeId,
+                                    orElse: () => {},
+                                  );
+                                  return sede.isNotEmpty && !_getSedesFiltradas().any((s) => s['id'] == sedeId);
+                                });
                               }
                             });
                           },
@@ -397,84 +639,69 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
             ),
           ),
           
-          // Sedes
+          // Selector en cascada de sedes
           Card(
+            color: _getColorContenedor(_getEstadoCampo('sedes')),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _getColorBorde(_getEstadoCampo('sedes')),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Sedes Educativas (${_sedesSeleccionadas.length} seleccionadas)', 
-                       style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  Container(
-                    height: 200,
-                    child: ListView.builder(
-                      itemCount: _sedes.length,
-                      itemBuilder: (context, index) {
-                        final sede = _sedes[index];
-                        final isSelected = _sedesSeleccionadas.contains(sede['id']);
-                        return CheckboxListTile(
-                          value: isSelected,
-                          onChanged: (selected) {
-                            setState(() {
-                              if (selected == true) {
-                                _sedesSeleccionadas.add(sede['id']);
-                              } else {
-                                _sedesSeleccionadas.remove(sede['id']);
-                              }
-                            });
-                          },
-                          title: Text(sede['nombre']),
-                          subtitle: Text(sede['direccion'] ?? 'Sin dirección'),
-                        );
-                      },
-                    ),
+                  Row(
+                    children: [
+                      Text('Sedes Educativas (${_sedesSeleccionadas.length} seleccionadas)', 
+                           style: TextStyle(fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Icon(
+                        _getEstadoCampo('sedes') == 'completado' 
+                          ? Icons.check_circle 
+                          : Icons.radio_button_unchecked,
+                        color: _getColorBorde(_getEstadoCampo('sedes')),
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  SelectorCascadaSedes(
+                    municipios: _municipios,
+                    instituciones: _instituciones,
+                    sedes: _sedes,
+                    sedesSeleccionadas: _sedesSeleccionadas,
+                    onSedesChanged: (sedes) {
+                      setState(() {
+                        _sedesSeleccionadas = sedes;
+                      });
+                    },
                   ),
                 ],
               ),
             ),
           ),
           
-          // Distribución
-          Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Tipo de Distribución', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  RadioListTile<String>(
-                    value: 'automatica',
-                    groupValue: _distribucion,
-                    onChanged: (value) => setState(() => _distribucion = value!),
-                    title: Text('Automática'),
-                    subtitle: Text('El sistema distribuye equitativamente'),
-                  ),
-                  RadioListTile<String>(
-                    value: 'equilibrada',
-                    groupValue: _distribucion,
-                    onChanged: (value) => setState(() => _distribucion = value!),
-                    title: Text('Equilibrada'),
-                    subtitle: Text('Considera la carga actual de cada visitador'),
-                  ),
-                ],
-              ),
-            ),
-          ),
           
           SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _programarVisitasMasivo,
+              onPressed: _puedeProgramar() ? _programarVisitasMasivo : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: _puedeProgramar() ? Colors.deepPurple : Colors.grey,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
               ),
-              child: Text('Programar Visitas Masivamente', style: TextStyle(fontSize: 16)),
+              child: Text(
+                _puedeProgramar() 
+                  ? 'Programar Visitas Masivamente' 
+                  : 'Complete todos los campos obligatorios',
+                style: TextStyle(fontSize: 16),
+              ),
             ),
           ),
         ],
@@ -546,5 +773,55 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
         ),
       ],
     );
+  }
+
+  bool _puedeProgramar() {
+    return _sedesSeleccionadas.isNotEmpty &&
+           _visitadoresSeleccionados.isNotEmpty &&
+           _fechaInicio != null &&
+           _fechaFin != null &&
+           _tipoVisita.isNotEmpty;
+  }
+
+  // Función para determinar el estado de un campo
+  String _getEstadoCampo(String campo) {
+    switch (campo) {
+      case 'tipoVisita':
+        return _tipoVisita.isNotEmpty ? 'completado' : 'pendiente';
+      case 'fechas':
+        return (_fechaInicio != null && _fechaFin != null) ? 'completado' : 'pendiente';
+      case 'visitadores':
+        return _visitadoresSeleccionados.isNotEmpty ? 'completado' : 'pendiente';
+      case 'sedes':
+        return _sedesSeleccionadas.isNotEmpty ? 'completado' : 'pendiente';
+      default:
+        return 'pendiente';
+    }
+  }
+
+  // Función para obtener el color del contenedor según el estado
+  Color _getColorContenedor(String estado) {
+    switch (estado) {
+      case 'completado':
+        return Colors.green.withOpacity(0.1);
+      case 'en_curso':
+        return Colors.blue.withOpacity(0.1);
+      case 'pendiente':
+      default:
+        return Colors.grey.withOpacity(0.1);
+    }
+  }
+
+  // Función para obtener el color del borde según el estado
+  Color _getColorBorde(String estado) {
+    switch (estado) {
+      case 'completado':
+        return Colors.green;
+      case 'en_curso':
+        return Colors.blue;
+      case 'pendiente':
+      default:
+        return Colors.grey;
+    }
   }
 }

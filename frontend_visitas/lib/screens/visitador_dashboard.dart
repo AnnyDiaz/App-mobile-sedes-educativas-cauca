@@ -9,6 +9,7 @@ import 'package:frontend_visitas/screens/perfil_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend_visitas/providers/theme_provider.dart';
 import 'package:frontend_visitas/theme/app_theme.dart';
+import 'package:frontend_visitas/services/error_handler_service.dart';
 
 class VisitadorDashboard extends StatefulWidget {
   const VisitadorDashboard({super.key});
@@ -62,9 +63,9 @@ class _VisitadorDashboardState extends State<VisitadorDashboard> {
         _apiService.getMisVisitasAsignadas(),
       ]);
 
-      print('✅ Todas las llamadas a API completadas');
-      print('👤 Perfil recibido: ${futures[0]}');
-      print('📋 Visitas asignadas recibidas: ${(futures[1] as List<dynamic>).length} items');
+      print(' Todas las llamadas a API completadas');
+      print(' Perfil recibido: ${futures[0]}');
+      print(' Visitas asignadas recibidas: ${(futures[1] as List<dynamic>).length} items');
 
       // Verificar si el widget sigue montado antes de actualizar
       if (mounted) {
@@ -115,23 +116,7 @@ class _VisitadorDashboardState extends State<VisitadorDashboard> {
   }
 
   Future<void> _cerrarSesion() async {
-    try {
-      // Limpiar token almacenado
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('token');
-      await prefs.remove('user_id');
-      await prefs.remove('user_role');
-      
-      // Navegar al login
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
-      }
-    } catch (e) {
-      // En caso de error, también navegar al login
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
-      }
-    }
+    await ErrorHandlerService.processLogout(context);
   }
 
   @override
@@ -345,14 +330,14 @@ class _VisitadorDashboardState extends State<VisitadorDashboard> {
         ),
         const SizedBox(height: 16),
         
-        // BOTÓN: Crear Cronograma PAE (PRINCIPAL)
+        // BOTÓN: Crear Visita PAE (PRINCIPAL)
         _buildActionButton(
-          title: '✅ Crear Cronograma PAE',
+          title: ' Crear Visita PAE',
           subtitle: 'Evaluación completa con checklist, evidencias y observaciones',
           icon: Icons.checklist,
           color: Colors.orange[600]!,
           onTap: () async {
-            print('🚀 Navegando a CrearCronogramaScreen...');
+            print(' Navegando a CrearCronogramaScreen...');
             final result = await Navigator.push(
               context,
               MaterialPageRoute(
@@ -384,7 +369,7 @@ class _VisitadorDashboardState extends State<VisitadorDashboard> {
         
         // BOTÓN: Visitas Asignadas (PRINCIPAL)
         _buildActionButton(
-          title: '📋 Visitas Asignadas',
+          title: ' Visitas Asignadas',
           subtitle: 'Gestionar visitas pendientes, en proceso y completadas',
           icon: Icons.assignment_turned_in,
           color: Colors.indigo[600]!,

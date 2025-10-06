@@ -33,7 +33,7 @@ class RegisterScreen extends StatelessWidget {
           "nombre": nombre,
           "correo": correo,
           "contrasena": contrasena,
-          "rol_id": 1, // Rol visitador
+          "rol_id": 1, // Rol Visitador
         }),
       );
 

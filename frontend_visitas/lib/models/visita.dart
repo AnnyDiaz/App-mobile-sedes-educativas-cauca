@@ -27,6 +27,7 @@ class Visita {
   final String? pdfEvidencia;
   final String? fotoFirma;
   final List<VisitaRespuesta> respuestasChecklist;
+  final int? numeroVisitaUsuario;
 
   Visita({
     required this.id,
@@ -49,6 +50,7 @@ class Visita {
     this.pdfEvidencia,
     this.fotoFirma,
     this.respuestasChecklist = const [],
+    this.numeroVisitaUsuario,
   });
 
   factory Visita.fromJson(Map<String, dynamic> json) {
@@ -81,6 +83,7 @@ class Visita {
               .map((item) => VisitaRespuesta.fromJson(item))
               .toList()
           : [],
+      numeroVisitaUsuario: json['numero_visita_usuario'],
     );
   }
 }

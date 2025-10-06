@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 from typing import List, Optional
 from datetime import datetime, timedelta
 from app.database import get_db
@@ -20,6 +21,9 @@ class ReporteRequest(BaseModel):
     municipio_id: Optional[int] = None
     institucion_id: Optional[int] = None
     estado: Optional[str] = None  # "pendiente", "completada", "cancelada"
+    busqueda: Optional[str] = None  # Término de búsqueda general
+    contrato: Optional[str] = None  # Búsqueda específica por contrato
+    operador: Optional[str] = None  # Búsqueda específica por operador
 
 @router.post("/generar")
 def generar_reporte(
@@ -30,12 +34,9 @@ def generar_reporte(
     """Genera reportes de visitas según los parámetros especificados"""
     
     try:
-        # Verificar permisos (solo supervisores y admins pueden generar reportes)
-        if usuario.rol.nombre not in ['supervisor', 'admin']:
-            raise HTTPException(
-                status_code=403,
-                detail="No tienes permisos para generar reportes"
-            )
+        # Verificar permisos - todos los roles pueden generar reportes, pero con restricciones
+        rol_usuario = usuario.rol.nombre
+        print(f"🔍 Usuario {usuario.nombre} ({rol_usuario}) solicitando reporte")
         
         # Construir la consulta base
         query = db.query(models.VisitaCompletaPAE).options(
@@ -44,6 +45,24 @@ def generar_reporte(
             joinedload(models.VisitaCompletaPAE.sede),
             joinedload(models.VisitaCompletaPAE.profesional)
         )
+        
+        # Aplicar restricciones según el rol del usuario
+        if rol_usuario == 'visitador':
+            # Los visitadores solo pueden ver sus propias visitas
+            query = query.filter(models.VisitaCompletaPAE.profesional_id == usuario.id)
+            print(f"🔒 Filtro aplicado: solo visitas del usuario {usuario.id}")
+        elif rol_usuario == 'supervisor':
+            # Los supervisores pueden ver visitas de su área (por implementar)
+            # Por ahora, pueden ver todas las visitas
+            print(f"👥 Supervisor: acceso a todas las visitas")
+        elif rol_usuario == 'admin':
+            # Los administradores pueden ver todas las visitas
+            print(f"👑 Admin: acceso total a todas las visitas")
+        else:
+            raise HTTPException(
+                status_code=403,
+                detail="Rol no autorizado para generar reportes"
+            )
         
         # Aplicar filtros (solo si se proporcionan)
         print(f"🔍 Filtros recibidos:")
@@ -77,6 +96,33 @@ def generar_reporte(
         
         if request.estado:
             query = query.filter(models.VisitaCompletaPAE.estado == request.estado)
+        
+        # Aplicar búsqueda específica por contrato
+        if request.contrato:
+            termino_contrato = f"%{request.contrato}%"
+            query = query.filter(models.VisitaCompletaPAE.contrato.ilike(termino_contrato))
+            print(f"🔍 Filtro contrato aplicado: '{request.contrato}'")
+        
+        # Aplicar búsqueda específica por operador
+        if request.operador:
+            termino_operador = f"%{request.operador}%"
+            query = query.filter(models.VisitaCompletaPAE.operador.ilike(termino_operador))
+            print(f"🔍 Filtro operador aplicado: '{request.operador}'")
+        
+        # Aplicar búsqueda general si se proporciona
+        if request.busqueda:
+            termino_busqueda = f"%{request.busqueda}%"
+            query = query.filter(
+                or_(
+                    models.VisitaCompletaPAE.observaciones.ilike(termino_busqueda),
+                    # Buscar en relaciones
+                    models.VisitaCompletaPAE.municipio.has(models.Municipio.nombre.ilike(termino_busqueda)),
+                    models.VisitaCompletaPAE.institucion.has(models.Institucion.nombre.ilike(termino_busqueda)),
+                    models.VisitaCompletaPAE.sede.has(models.SedeEducativa.nombre_sede.ilike(termino_busqueda)),
+                    models.VisitaCompletaPAE.profesional.has(models.Usuario.nombre.ilike(termino_busqueda)),
+                )
+            )
+            print(f"🔍 Búsqueda general aplicada: '{request.busqueda}'")
         
         # Ejecutar la consulta
         visitas = query.order_by(models.VisitaCompletaPAE.fecha_creacion.desc()).all()

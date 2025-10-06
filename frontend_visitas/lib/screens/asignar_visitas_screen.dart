@@ -337,7 +337,11 @@ class _AsignarVisitasScreenState extends State<AsignarVisitasScreen> {
                     items: _instituciones.where((institucion) => institucion != null && institucion['nombre'] != null).map((institucion) {
                       return DropdownMenuItem<String>(
                         value: institucion!['id']?.toString() ?? '',
-                        child: Text(institucion!['nombre'] ?? 'Sin nombre'),
+                        child: Text(
+                          institucion!['nombre'] ?? 'Sin nombre',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -521,6 +525,7 @@ class _AsignarVisitasScreenState extends State<AsignarVisitasScreen> {
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
+          isExpanded: true,
           items: items,
           onChanged: onChanged,
           validator: validator,

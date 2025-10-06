@@ -66,12 +66,12 @@ class _SupervisorDashboardRealState extends State<SupervisorDashboardReal> {
       
       // Navegar al login
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+        Navigator.of(context).pushReplacementNamed('/auth');
       }
     } catch (e) {
       // En caso de error, también navegar al login
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+        Navigator.of(context).pushReplacementNamed('/auth');
       }
     }
   }

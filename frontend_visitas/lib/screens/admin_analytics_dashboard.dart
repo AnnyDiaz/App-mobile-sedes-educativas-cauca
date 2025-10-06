@@ -184,7 +184,13 @@ class _AdminAnalyticsDashboardState extends State<AdminAnalyticsDashboard>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(_periodoSeleccionado.toUpperCase()),
+                  Flexible(
+                    child: Text(
+                      _periodoSeleccionado.toUpperCase(),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
                   Icon(Icons.arrow_drop_down),
                 ],
               ),

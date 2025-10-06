@@ -1239,9 +1239,13 @@ class _AdminChecklistManagementEnhancedState extends State<AdminChecklistManagem
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Text(
-                '$itemsCategoria items',
-                style: const TextStyle(color: Colors.grey),
+              Flexible(
+                child: Text(
+                  '$itemsCategoria items',
+                  style: const TextStyle(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
             ],
           ),

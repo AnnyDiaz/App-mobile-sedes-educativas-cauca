@@ -257,7 +257,11 @@ class _CronogramasGuardadosScreenState extends State<CronogramasGuardadosScreen>
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ],
       ),

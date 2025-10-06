@@ -287,7 +287,7 @@ class _CalendarioVisitasScreenState extends State<CalendarioVisitasScreen> {
                               child: ElevatedButton.icon(
                   onPressed: () => _crearCronogramaPAE(visita),
                   icon: const Icon(Icons.add_task),
-                  label: const Text('Crear Cronograma PAE'),
+                  label: const Text('Crear Visita PAE'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[600],
                     foregroundColor: Colors.white,
@@ -362,9 +362,35 @@ class _CalendarioVisitasScreenState extends State<CalendarioVisitasScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                TableCalendar<VisitaProgramada>(
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.blue[50]!,
+                    Colors.white,
+                  ],
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Contenedor para el calendario
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TableCalendar<VisitaProgramada>(
                   firstDay: DateTime.utc(2024, 1, 1),
                   lastDay: DateTime.utc(2030, 12, 31),
                   focusedDay: _focusedDay,
@@ -412,11 +438,13 @@ class _CalendarioVisitasScreenState extends State<CalendarioVisitasScreen> {
                     },
                   ),
                 ),
-                const Divider(height: 1),
-                Expanded(
-                  child: _buildEventosDelDia(),
-                ),
-              ],
+                    ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: _buildEventosDelDia(),
+                  ),
+                ],
+              ),
             ),
     );
   }

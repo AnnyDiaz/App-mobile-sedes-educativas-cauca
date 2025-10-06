@@ -1,8 +1,8 @@
 # app/routes/visitas_completas.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 try:
     import pandas as pd
@@ -167,6 +167,13 @@ def crear_visita_completa_pae(
         if not profesional:
             raise HTTPException(status_code=400, detail="Profesional no encontrado")
 
+        # Calcular el número de visita para este usuario
+        # Contar visitas existentes del usuario + 1
+        visitas_usuario_count = db.query(models.VisitaCompletaPAE).filter(
+            models.VisitaCompletaPAE.profesional_id == datos.profesional_id
+        ).count()
+        numero_visita_usuario = visitas_usuario_count + 1
+
         # Crear la visita completa
         visita_completa = models.VisitaCompletaPAE(
             fecha_visita=datos.fecha_visita,
@@ -178,7 +185,8 @@ def crear_visita_completa_pae(
             sede_id=datos.sede_id,
             profesional_id=datos.profesional_id,
             observaciones=datos.observaciones,
-            estado="completada"  # Se marca como completada inmediatamente
+            estado="completada",  # Se marca como completada inmediatamente
+            numero_visita_usuario=numero_visita_usuario
         )
         
         db.add(visita_completa)
@@ -288,32 +296,120 @@ def crear_visita_completa_pae(
 
 @router.get("/visitas-completas-pae", response_model=List[schemas.VisitaCompletaPAEOut])
 def listar_visitas_completas_pae(
+    contrato: Optional[str] = Query(None, description="Filtrar por contrato"),
+    operador: Optional[str] = Query(None, description="Filtrar por operador"),
+    municipio_id: Optional[int] = Query(None, description="Filtrar por municipio"),
+    institucion_id: Optional[int] = Query(None, description="Filtrar por institución"),
+    estado: Optional[str] = Query(None, description="Filtrar por estado"),
+    fecha_inicio: Optional[str] = Query(None, description="Filtrar desde fecha (YYYY-MM-DD)"),
+    fecha_fin: Optional[str] = Query(None, description="Filtrar hasta fecha (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(get_current_user)
 ):
     """
-    Lista todas las visitas completas PAE
+    Lista las visitas completas PAE del usuario actual con filtros opcionales
     """
     try:
-        # Obtener todas las visitas con relaciones cargadas
-        visitas = db.query(models.VisitaCompletaPAE).options(
+        # Construir query base - FILTRAR POR USUARIO ACTUAL
+        query = db.query(models.VisitaCompletaPAE).filter(
+            models.VisitaCompletaPAE.profesional_id == current_user.id
+        )
+        
+        # Aplicar filtros
+        if contrato:
+            query = query.filter(models.VisitaCompletaPAE.contrato.ilike(f"%{contrato}%"))
+        
+        if operador:
+            query = query.filter(models.VisitaCompletaPAE.operador.ilike(f"%{operador}%"))
+        
+        if municipio_id:
+            query = query.filter(models.VisitaCompletaPAE.municipio_id == municipio_id)
+        
+        if institucion_id:
+            query = query.filter(models.VisitaCompletaPAE.institucion_id == institucion_id)
+        
+        if estado:
+            query = query.filter(models.VisitaCompletaPAE.estado == estado)
+        
+        if fecha_inicio:
+            from datetime import datetime
+            try:
+                fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+                query = query.filter(models.VisitaCompletaPAE.fecha_visita >= fecha_inicio_dt)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Formato de fecha_inicio inválido. Use YYYY-MM-DD")
+        
+        if fecha_fin:
+            from datetime import datetime
+            try:
+                fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+                # Agregar 23:59:59 para incluir todo el día
+                fecha_fin_dt = fecha_fin_dt.replace(hour=23, minute=59, second=59)
+                query = query.filter(models.VisitaCompletaPAE.fecha_visita <= fecha_fin_dt)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Formato de fecha_fin inválido. Use YYYY-MM-DD")
+        
+        # Obtener visitas con relaciones cargadas
+        visitas = query.options(
             joinedload(models.VisitaCompletaPAE.municipio),
             joinedload(models.VisitaCompletaPAE.institucion),
             joinedload(models.VisitaCompletaPAE.sede),
             joinedload(models.VisitaCompletaPAE.profesional),
             joinedload(models.VisitaCompletaPAE.respuestas_checklist)
-        ).all()
+        ).order_by(models.VisitaCompletaPAE.fecha_visita.desc()).all()
         
         print(f"🔍 Encontradas {len(visitas)} visitas completas PAE")
         for visita in visitas:
-            print(f"   - Visita ID: {visita.id}, Estado: {visita.estado}, Profesional: {visita.profesional.nombre if visita.profesional else 'N/A'}")
+            print(f"   - Visita ID: {visita.id}, Estado: {visita.estado}, Profesional: {visita.profesional.nombre if visita.profesional else 'N/A'}, Contrato: {visita.contrato}, Operador: {visita.operador}")
         
         return visitas
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"❌ Error al listar visitas completas: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Error al listar visitas completas: {str(e)}"
+        )
+
+@router.get("/visitas-completas-pae/filtros")
+def obtener_opciones_filtros(
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    """
+    Obtiene las opciones disponibles para los filtros de visitas completas PAE del usuario actual
+    """
+    try:
+        # Obtener contratos únicos del usuario actual
+        contratos = db.query(models.VisitaCompletaPAE.contrato).filter(
+            models.VisitaCompletaPAE.profesional_id == current_user.id,
+            models.VisitaCompletaPAE.contrato.isnot(None),
+            models.VisitaCompletaPAE.contrato != ""
+        ).distinct().all()
+        
+        # Obtener operadores únicos del usuario actual
+        operadores = db.query(models.VisitaCompletaPAE.operador).filter(
+            models.VisitaCompletaPAE.profesional_id == current_user.id,
+            models.VisitaCompletaPAE.operador.isnot(None),
+            models.VisitaCompletaPAE.operador != ""
+        ).distinct().all()
+        
+        # Obtener estados únicos del usuario actual
+        estados = db.query(models.VisitaCompletaPAE.estado).filter(
+            models.VisitaCompletaPAE.profesional_id == current_user.id
+        ).distinct().all()
+        
+        return {
+            "contratos": [c[0] for c in contratos if c[0]],
+            "operadores": [o[0] for o in operadores if o[0]],
+            "estados": [e[0] for e in estados if e[0]]
+        }
+    except Exception as e:
+        print(f"❌ Error al obtener opciones de filtros: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener opciones de filtros: {str(e)}"
         )
 
 @router.get("/visitas-completas-pae/pendientes", response_model=List[schemas.VisitaCompletaPAEOut])
