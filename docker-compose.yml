@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: visitas_db
+    environment:
+      POSTGRES_DB: visitas_cauca
+      POSTGRES_USER: visitas
+      POSTGRES_PASSWORD: visitas
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U visitas -d visitas_cauca"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    container_name: visitas_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://visitas:visitas@db:5432/visitas_cauca
+      SECRET_KEY: ${SECRET_KEY:-change_me}
+      ACCESS_TOKEN_EXPIRE_MINUTES: 15
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080,*,http://localhost:*,http://127.0.0.1:*
+    ports:
+      - "8000:8000"
+    volumes:
+      - media_data:/app/media
+
+volumes:
+  db_data:
+  media_data:
+
+
