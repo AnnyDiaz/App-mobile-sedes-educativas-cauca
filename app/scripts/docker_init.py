@@ -60,7 +60,7 @@ def initialize_database():
             print("   - Usuario administrador creado")
             print("\nCredenciales de administrador:")
             print("   Email: admin@test.com")
-            print("   Password: admin123")
+            print("   Password: admin")
             
             return True
             

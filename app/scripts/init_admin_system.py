@@ -49,7 +49,7 @@ def create_admin_user(db: Session):
     """Crea el usuario administrador inicial."""
     
     admin_email = "admin@test.com"
-    admin_password = "admin123"  # Cambiar en producción
+    admin_password = "admin"  # Cambiar en producción
     
     print("Creando usuario administrador inicial...")
     
@@ -116,7 +116,7 @@ def main():
         print("   - Usuario administrador creado")
         print("\nCredenciales de administrador:")
         print("   Email: admin@test.com")
-        print("   Password: admin123")
+        print("   Password: admin")
         print("   IMPORTANTE: Cambiar contrasena en primer login")
         
     except Exception as e:
