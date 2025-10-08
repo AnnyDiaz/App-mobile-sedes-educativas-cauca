@@ -59,8 +59,8 @@ def initialize_database():
             print("   - Roles basicos creados")
             print("   - Usuario administrador creado")
             print("\nCredenciales de administrador:")
-            print("   Email: admin@educacion.cauca.gov.co")
-            print("   Password: Admin123!")
+            print("   Email: admin@test.com")
+            print("   Password: admin123")
             
             return True
             
