@@ -48,8 +48,8 @@ def create_default_roles(db: Session):
 def create_admin_user(db: Session):
     """Crea el usuario administrador inicial."""
     
-    admin_email = "admin@educacion.cauca.gov.co"
-    admin_password = "Admin123!"  # Cambiar en producción
+    admin_email = "admin@test.com"
+    admin_password = "admin123"  # Cambiar en producción
     
     print("Creando usuario administrador inicial...")
     
@@ -115,8 +115,8 @@ def main():
         print("   - Roles basicos creados")
         print("   - Usuario administrador creado")
         print("\nCredenciales de administrador:")
-        print("   Email: admin@educacion.cauca.gov.co")
-        print("   Password: Admin123!")
+        print("   Email: admin@test.com")
+        print("   Password: admin123")
         print("   IMPORTANTE: Cambiar contrasena en primer login")
         
     except Exception as e:
