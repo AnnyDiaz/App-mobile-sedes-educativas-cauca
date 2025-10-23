@@ -125,6 +125,7 @@ class AppTheme {
   static Color getRoleColor(String role, bool isDark) {
     switch (role.toLowerCase()) {
       case 'admin':
+      case 'super administrador':
         return isDark ? Colors.purple.shade300 : Colors.purple.shade600;
       case 'supervisor':
         return isDark ? Colors.indigo.shade300 : Colors.indigo.shade600;

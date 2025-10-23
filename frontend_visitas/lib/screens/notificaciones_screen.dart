@@ -239,7 +239,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -299,7 +299,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: recordatorio['color'].withValues(alpha: 0.1),
+                color: recordatorio['color'].withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -332,7 +332,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _getPriorityColor(recordatorio['prioridad']).withValues(alpha: 0.1),
+                color: _getPriorityColor(recordatorio['prioridad']).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -442,7 +442,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(

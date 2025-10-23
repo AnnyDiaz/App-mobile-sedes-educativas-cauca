@@ -2116,7 +2116,7 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
 
       final connectivityResult = await Connectivity().checkConnectivity();
 
-      if (connectivityResult.contains(ConnectivityResult.none)) {
+      if (connectivityResult == ConnectivityResult.none) {
         // Guardar visita localmente
         final visitaId = await LocalDB.guardarVisitaLocal(data);
         

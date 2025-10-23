@@ -408,7 +408,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
             Container(
               padding: EdgeInsets.all(ResponsiveUtils.getResponsiveSpacing(context) * 1.5),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: ResponsiveUtils.getIconSize(context)),

@@ -67,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // 3. Usamos la ruta correcta del main.dart
         switch (rol) {
           case "admin":
+          case "super administrador":
             Navigator.pushReplacementNamed(context, '/admin_dashboard');
             break;
           case "supervisor":

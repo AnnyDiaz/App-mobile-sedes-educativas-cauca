@@ -414,7 +414,7 @@ class _VisitasEquipoScreenState extends State<VisitasEquipoScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getColorEstado(estado).withValues(alpha: 0.1),
+                    color: _getColorEstado(estado).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: _getColorEstado(estado)),
                   ),
