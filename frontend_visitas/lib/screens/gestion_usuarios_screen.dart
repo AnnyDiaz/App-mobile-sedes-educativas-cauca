@@ -189,7 +189,7 @@ class _GestionUsuariosScreenState extends State<GestionUsuariosScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -252,7 +252,7 @@ class _GestionUsuariosScreenState extends State<GestionUsuariosScreen> {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: _getColorForRol(usuario.rol).withValues(alpha: 0.1),
+              backgroundColor: _getColorForRol(usuario.rol).withOpacity(0.1),
               child: Icon(
                 _getIconForRol(usuario.rol),
                 color: _getColorForRol(usuario.rol),
@@ -280,7 +280,7 @@ class _GestionUsuariosScreenState extends State<GestionUsuariosScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _getColorForRol(usuario.rol).withValues(alpha: 0.1),
+                          color: _getColorForRol(usuario.rol).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -296,7 +296,7 @@ class _GestionUsuariosScreenState extends State<GestionUsuariosScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: (usuario.activo == true ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                          color: (usuario.activo == true ? Colors.green : Colors.red).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -326,6 +326,7 @@ class _GestionUsuariosScreenState extends State<GestionUsuariosScreen> {
       case 'visitador':
         return Colors.orange;
       case 'admin':
+      case 'super administrador':
         return Colors.red;
       default:
         return Colors.grey;
@@ -339,6 +340,7 @@ class _GestionUsuariosScreenState extends State<GestionUsuariosScreen> {
       case 'visitador':
         return Icons.person;
       case 'admin':
+      case 'super administrador':
         return Icons.security;
       default:
         return Icons.person_outline;

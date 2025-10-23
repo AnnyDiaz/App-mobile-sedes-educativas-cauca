@@ -197,7 +197,7 @@ class _NotificacionesSupervisorScreenState extends State<NotificacionesSuperviso
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -389,7 +389,7 @@ class _NotificacionesSupervisorScreenState extends State<NotificacionesSuperviso
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(icon, color: color, size: 20),
@@ -427,7 +427,7 @@ class _NotificacionesSupervisorScreenState extends State<NotificacionesSuperviso
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: _getPriorityColor(alerta['prioridad']).withValues(alpha: 0.1),
+                color: _getPriorityColor(alerta['prioridad']).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(

@@ -12,9 +12,13 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
+
+// Apply Flutter properties to all subprojects
+apply(from = "flutter.gradle")
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)

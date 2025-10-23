@@ -300,6 +300,23 @@ def obtener_estadisticas_visitador(
             detail=f"Error al obtener estadísticas: {str(e)}"
         )
 
+@router.get("/test-auth")
+def test_auth(
+    usuario: models.Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint de prueba para verificar autenticación básica.
+    """
+    return {
+        "mensaje": "Autenticación exitosa",
+        "usuario_id": usuario.id,
+        "nombre": usuario.nombre,
+        "correo": usuario.correo,
+        "rol": usuario.rol.nombre if usuario.rol else "Sin rol",
+        "activo": usuario.activo
+    }
+
 @router.get("/perfil")
 def obtener_perfil_usuario(
     usuario: models.Usuario = Depends(get_current_user),
@@ -307,7 +324,10 @@ def obtener_perfil_usuario(
 ):
     """
     Obtiene el perfil del usuario autenticado.
+    Accesible para todos los usuarios autenticados.
     """
+    print(f"🔍 Usuario solicitando perfil: {usuario.correo}, Rol: {usuario.rol.nombre if usuario.rol else 'Sin rol'}")
+    
     # Cargar el usuario con sus relaciones
     usuario_completo = db.query(models.Usuario).options(
         joinedload(models.Usuario.rol)

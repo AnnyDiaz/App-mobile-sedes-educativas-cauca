@@ -148,15 +148,11 @@ def obtener_mis_visitas_asignadas(
     usuario_actual: models.Usuario = Depends(verificar_token_simple)
 ):
     """
-    Obtiene las visitas asignadas al usuario actual (visitador).
+    Obtiene las visitas asignadas al usuario actual.
+    Accesible para todos los usuarios autenticados.
     """
     try:
-        # Verificar que el usuario es un visitador
-        if usuario_actual.rol.nombre.lower() != 'visitador':
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Solo los visitadores pueden ver sus visitas asignadas."
-            )
+        print(f"🔍 Usuario solicitando visitas asignadas: {usuario_actual.correo}, Rol: {usuario_actual.rol.nombre if usuario_actual.rol else 'Sin rol'}")
         
         # Construir la consulta base
         query = db.query(models.VisitaAsignada).filter(

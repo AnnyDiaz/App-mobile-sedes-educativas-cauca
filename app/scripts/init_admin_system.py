@@ -62,13 +62,13 @@ def create_admin_user(db: Session):
         print(f"  Usuario administrador ya existe: {admin_email}")
         return
     
-    # Obtener rol de Super Administrador
-    super_admin_rol = db.query(Rol).filter(
-        Rol.nombre == "Super Administrador"
+    # Obtener rol de Administrador (no Super Administrador)
+    admin_rol = db.query(Rol).filter(
+        Rol.nombre == "Administrador"
     ).first()
     
-    if not super_admin_rol:
-        print("  Error: No se encontro el rol Super Administrador")
+    if not admin_rol:
+        print("  Error: No se encontro el rol Administrador")
         return
     
     # Crear usuario
@@ -76,7 +76,7 @@ def create_admin_user(db: Session):
         nombre="Administrador del Sistema",
         correo=admin_email,
         contrasena=pwd_context.hash(admin_password),
-        rol_id=super_admin_rol.id
+        rol_id=admin_rol.id
     )
     
     db.add(admin_user)
@@ -85,6 +85,7 @@ def create_admin_user(db: Session):
     print(f"  Usuario administrador creado:")
     print(f"     Email: {admin_email}")
     print(f"     Password: {admin_password}")
+    print(f"     Rol: Administrador")
     print(f"     IMPORTANTE: Cambiar la contrasena en el primer login")
 
 # Funciones de configuración eliminadas - no existen los modelos necesarios
