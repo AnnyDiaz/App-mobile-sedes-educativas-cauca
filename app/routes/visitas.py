@@ -19,13 +19,7 @@ router = APIRouter(
 )
 
 # --- ENDPOINTS DE CONSULTA GEOGRÁFICA (NORMALIZADOS) ---
-
-@router.get("/municipios", response_model=List[schemas.MunicipioOut])
-def listar_municipios(db: Session = Depends(get_db)):
-    """
-    Obtiene una lista de todos los municipios desde la tabla normalizada.
-    """
-    return db.query(models.Municipio).order_by(models.Municipio.nombre).all()
+# Nota: Los municipios se manejan en app/routes/municipios.py
 
 @router.get("/instituciones", response_model=List[schemas.InstitucionOut])
 def listar_instituciones(db: Session = Depends(get_db)):

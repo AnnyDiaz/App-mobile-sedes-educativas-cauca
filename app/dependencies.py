@@ -21,7 +21,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_db)):
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
-    usuario = db.query(models.Usuario).filter(models.Usuario.correo == user_email).first()
+    # Cargar usuario con su rol usando joinedload
+    from sqlalchemy.orm import joinedload
+    usuario = db.query(models.Usuario).options(
+        joinedload(models.Usuario.rol)
+    ).filter(models.Usuario.correo == user_email).first()
+    
     if usuario is None:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    
+    print(f"🔍 Usuario autenticado: {usuario.correo}, Rol: {usuario.rol.nombre if usuario.rol else 'Sin rol'}")
     return usuario
