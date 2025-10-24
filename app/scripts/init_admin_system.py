@@ -46,21 +46,12 @@ def create_default_roles(db: Session):
 # Funciones de permisos eliminadas - no existen los modelos necesarios
 
 def create_admin_user(db: Session):
-    """Crea el usuario administrador inicial."""
+    """Crea el usuario administrador inicial o actualiza el existente."""
     
     admin_email = "admin@test.com"
     admin_password = "admin"  # Cambiar en producción
     
-    print("Creando usuario administrador inicial...")
-    
-    # Verificar si ya existe
-    admin_existente = db.query(Usuario).filter(
-        Usuario.correo == admin_email
-    ).first()
-    
-    if admin_existente:
-        print(f"  Usuario administrador ya existe: {admin_email}")
-        return
+    print("Creando/actualizando usuario administrador inicial...")
     
     # Obtener rol de Administrador (no Super Administrador)
     admin_rol = db.query(Rol).filter(
@@ -71,7 +62,30 @@ def create_admin_user(db: Session):
         print("  Error: No se encontro el rol Administrador")
         return
     
-    # Crear usuario
+    # Verificar si ya existe
+    admin_existente = db.query(Usuario).filter(
+        Usuario.correo == admin_email
+    ).first()
+    
+    if admin_existente:
+        print(f"  Usuario administrador ya existe: {admin_email}")
+        
+        # Verificar y actualizar rol si es necesario
+        if admin_existente.rol_id != admin_rol.id:
+            print(f"  Actualizando rol de usuario existente...")
+            admin_existente.rol_id = admin_rol.id
+            db.commit()
+            print(f"  Rol actualizado a: Administrador")
+        else:
+            print(f"  Usuario ya tiene el rol correcto: Administrador")
+        
+        print(f"  Credenciales:")
+        print(f"     Email: {admin_email}")
+        print(f"     Password: {admin_password}")
+        print(f"     Rol: Administrador")
+        return
+    
+    # Crear usuario nuevo
     admin_user = Usuario(
         nombre="Administrador del Sistema",
         correo=admin_email,

@@ -1077,9 +1077,7 @@ COPY public.usuarios (id, nombre, correo, contrasena, rol_id) FROM stdin;
 6	daniel	daaaaniel@gmail.com	$2b$12$Q2/29Sh2tESKYQcn6N4mSuu6MjxgzLiDRtIawqks5KJB3.PdNm8bW	1
 7	daniel	dasaaaniel@gmail.com	$2b$12$dCc8sV3NOYZvUyDCQtIRROgc7vJM.sGSB39IngrfF0Bi6O.0cPInK	1
 8	deyby	dey@gmail.com	$2b$12$f8H9ujhUdbO2Ci40LhOnXuXsc5oDYejwYCkMI3rqwEjbmM35QJgTe	1
-9	Usuario Test	test@test.com	$2b$12$9MccjMhaY4tCrxTVn7M5B.j0Seu6.6.2SU3VK/swfH8Tac1YchFeW	1
 10	supervisor test	test@supervisor.com	$2b$12$4netFzNrbUKtLtzH6qf6NuG0G/dpFwoiXyy.y6Oo.7.yu9PvvG3Uu	1
-11	Supervisor Test	supervisor@test.com	$2b$12$DldsFEl3NIBcPJ4Gejpvx.xmBKkK2p9zNiFNMKtjsiOovsTg4yLC.	4
 \.
 
 

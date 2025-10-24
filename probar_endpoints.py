@@ -11,8 +11,8 @@ BASE_URL = "http://127.0.0.1:8000"
 def login():
     """Hacer login para obtener un token"""
     login_data = {
-        "correo": "test@test.com",
-        "contrasena": "test123"
+        "correo": "admin@test.com",
+        "contrasena": "admin"
     }
     
     response = requests.post(f"{BASE_URL}/auth/login", json=login_data)

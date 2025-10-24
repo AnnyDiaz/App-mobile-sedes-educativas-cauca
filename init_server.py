@@ -50,29 +50,11 @@ def init_server():
     except Exception as e:
         print(f"  ❌ Error creando admin: {e}")
     
-    # 3. Crear usuario de prueba
-    print("\n🧪 Creando usuario de prueba...")
-    test_data = {
-        "nombre": "Test User",
-        "correo": "test@test.com",
-        "contrasena": "Test123!",
-        "rol_id": 4  # Visitador
-    }
-    
-    try:
-        response = requests.post(f"{base_url}/api/auth/register", json=test_data)
-        if response.status_code in [200, 201]:
-            print("  ✅ Usuario test creado")
-        else:
-            print(f"  ⚠️  Usuario test: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"  ❌ Error creando test: {e}")
-    
-    # 4. Probar login
-    print("\n🔐 Probando login...")
+    # 3. Probar login con admin
+    print("\n🔐 Probando login con admin...")
     login_data = {
-        "correo": "test@test.com",
-        "contrasena": "Test123!"
+        "correo": "admin@educacion.cauca.gov.co",
+        "contrasena": "Admin123!"
     }
     
     try:
