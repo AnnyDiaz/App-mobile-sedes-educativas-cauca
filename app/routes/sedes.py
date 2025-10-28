@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List
+import traceback
 from ..database import get_db
 from ..models import SedeEducativa, Institucion, Municipio, Usuario
 from .. import models
@@ -21,17 +22,18 @@ def get_sedes(db: Session = Depends(get_db)):
             sedes.append({
                 "id": sede.id,
                 "nombre": sede.nombre_sede,
-                "dane": sede.dane,
-                "due": sede.due,
+                "dane": sede.dane or "",  # Convertir None a string vacío
+                "due": sede.due or "",  # Convertir None a string vacío
                 "municipio_id": sede.municipio_id,
                 "institucion_id": sede.institucion_id,
-                "principal": sede.principal,
+                "principal": sede.principal or False,
                 "lat": sede.lat,
                 "lon": sede.lon
             })
         return sedes
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener sedes: {str(e)}")
+        error_detail = f"Error al obtener sedes: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 @router.get("/test_sedes")
 def test_sedes():
@@ -52,18 +54,19 @@ def get_sedes_institucion(institucion_id: int, db: Session = Depends(get_db)):
             resultado.append({
                 "id": sede.id,
                 "nombre": sede.nombre_sede,
-                "dane": sede.dane,
-                "due": sede.due,
+                "dane": sede.dane or "",  # Convertir None a string vacío
+                "due": sede.due or "",  # Convertir None a string vacío
                 "municipio_id": sede.municipio_id,
                 "institucion_id": sede.institucion_id,
-                "principal": sede.principal,
+                "principal": sede.principal or False,
                 "lat": sede.lat,
                 "lon": sede.lon
             })
         
         return resultado
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener sedes por institución: {str(e)}")
+        error_detail = f"Error al obtener sedes por institución: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 @router.get("/sedes_por_institucion/{institucion_id}", response_model=List[SedeEducativaBasicaOut])
 def get_sedes_por_institucion(institucion_id: int, db: Session = Depends(get_db)):
@@ -79,18 +82,19 @@ def get_sedes_por_institucion(institucion_id: int, db: Session = Depends(get_db)
             resultado.append({
                 "id": sede.id,
                 "nombre": sede.nombre_sede,
-                "dane": sede.dane,
-                "due": sede.due,
+                "dane": sede.dane or "",  # Convertir None a string vacío
+                "due": sede.due or "",  # Convertir None a string vacío
                 "municipio_id": sede.municipio_id,
                 "institucion_id": sede.institucion_id,
-                "principal": sede.principal,
+                "principal": sede.principal or False,
                 "lat": sede.lat,
                 "lon": sede.lon
             })
         
         return resultado
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener sedes por institución: {str(e)}")
+        error_detail = f"Error al obtener sedes por institución: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 @router.get("/sedes_por_municipio/{municipio_id}", response_model=List[SedeEducativaBasicaOut])
 def get_sedes_por_municipio(municipio_id: int, db: Session = Depends(get_db)):
@@ -105,17 +109,18 @@ def get_sedes_por_municipio(municipio_id: int, db: Session = Depends(get_db)):
             sedes.append({
                 "id": sede.id,
                 "nombre": sede.nombre_sede,
-                "dane": sede.dane,
-                "due": sede.due,
+                "dane": sede.dane or "",  # Convertir None a string vacío
+                "due": sede.due or "",  # Convertir None a string vacío
                 "municipio_id": sede.municipio_id,
                 "institucion_id": sede.institucion_id,
-                "principal": sede.principal,
+                "principal": sede.principal or False,
                 "lat": sede.lat,
                 "lon": sede.lon
             })
         return sedes
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener sedes por municipio: {str(e)}")
+        error_detail = f"Error al obtener sedes por municipio: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 @router.get("/sedes/{sede_id}", response_model=SedeEducativaBasicaOut)
 def get_sede(sede_id: int, db: Session = Depends(get_db)):
@@ -128,18 +133,19 @@ def get_sede(sede_id: int, db: Session = Depends(get_db)):
         return {
             "id": sede.id,
             "nombre": sede.nombre_sede,
-            "dane": sede.dane,
-            "due": sede.due,
+            "dane": sede.dane or "",  # Convertir None a string vacío
+            "due": sede.due or "",  # Convertir None a string vacío
             "municipio_id": sede.municipio_id,
             "institucion_id": sede.institucion_id,
-            "principal": sede.principal,
+            "principal": sede.principal or False,
             "lat": sede.lat,
             "lon": sede.lon
         }
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener sede: {str(e)}")
+        error_detail = f"Error al obtener sede: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 @router.post("/sedes", response_model=SedeResponse)
 def crear_sede(
