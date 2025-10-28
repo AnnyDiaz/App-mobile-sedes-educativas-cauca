@@ -1,0 +1,39 @@
+# Dockerfile para generar APK
+FROM ubuntu:22.04
+
+# Instalar dependencias
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    unzip \
+    xz-utils \
+    zip \
+    libglu1-mesa \
+    openjdk-17-jdk \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar Flutter
+RUN cd /opt && \
+    curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.5-stable.tar.xz && \
+    tar xf flutter_linux_3.24.5-stable.tar.xz && \
+    rm flutter_linux_3.24.5-stable.tar.xz
+
+# Configurar PATH
+ENV PATH="/opt/flutter/bin:${PATH}"
+
+# Configurar Flutter
+RUN flutter config --no-analytics
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar proyecto
+COPY frontend_visitas/ .
+
+# Generar APK
+RUN flutter clean && \
+    flutter pub get && \
+    flutter build apk --release
+
+# Comando por defecto
+CMD ["ls", "-la", "build/app/outputs/flutter-apk/"]
