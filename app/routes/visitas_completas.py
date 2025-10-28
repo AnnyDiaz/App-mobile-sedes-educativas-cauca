@@ -22,6 +22,16 @@ from app.dependencies import get_current_user
 
 router = APIRouter()
 
+# Función helper para normalizar campos None en sedes
+def normalizar_sede(sede):
+    """Normaliza campos None en la sede a strings vacíos para evitar errores de serialización"""
+    if sede:
+        if hasattr(sede, 'dane') and sede.dane is None:
+            sede.dane = ""
+        if hasattr(sede, 'due') and sede.due is None:
+            sede.due = ""
+    return sede
+
 @router.post("/test-crear-cronograma")
 def test_crear_cronograma(
     datos: schemas.VisitaCompletaPAECreate,
@@ -298,6 +308,7 @@ def crear_visita_completa_pae(
         if not visita_retornar:
             raise HTTPException(status_code=500, detail="Error al recuperar la visita creada")
         
+        # El schema ahora acepta None, no necesitamos normalizar
         return visita_retornar
         
     except HTTPException:
@@ -383,6 +394,7 @@ def listar_visitas_completas_pae(
             joinedload(models.VisitaCompletaPAE.respuestas_checklist)
         ).order_by(models.VisitaCompletaPAE.fecha_visita.desc()).all()
         
+        # El schema ahora acepta None, no necesitamos normalizar
         print(f"🔍 Encontradas {len(visitas)} visitas completas PAE")
         for visita in visitas:
             print(f"   - Visita ID: {visita.id}, Estado: {visita.estado}, Profesional: {visita.profesional.nombre if visita.profesional else 'N/A'}, Contrato: {visita.contrato}, Operador: {visita.operador}")
@@ -457,6 +469,7 @@ def listar_visitas_pendientes(
             joinedload(models.VisitaCompletaPAE.respuestas_checklist)
         ).all()
         
+        # El schema ahora acepta None, no necesitamos normalizar
         print(f"🔍 Encontradas {len(visitas)} visitas pendientes PAE")
         for visita in visitas:
             print(f"   - Visita ID: {visita.id}, Estado: {visita.estado}, Profesional: {visita.profesional.nombre if visita.profesional else 'N/A'}")
@@ -485,6 +498,7 @@ def obtener_visita_completa_pae(
     if not visita:
         raise HTTPException(status_code=404, detail="Visita no encontrada")
     
+    # El schema ahora acepta None, no necesitamos normalizar
     return visita
 
 @router.get("/visitas-completas-pae/{visita_id}/excel")

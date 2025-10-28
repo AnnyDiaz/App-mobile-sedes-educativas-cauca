@@ -81,9 +81,9 @@ InstitucionResponse = InstitucionOut
 # Schema completo para la sede
 class SedeEducativaOut(BaseModel):
     id: int
-    nombre: str
-    dane: Optional[str] = ""  # Puede ser None, convertimos a string vacío
-    due: Optional[str] = ""  # Puede ser None, convertimos a string vacío
+    nombre: str  # Alias para nombre_sede (manejado por la propiedad del modelo)
+    dane: Optional[str] = None  # Puede ser None, FastAPI lo convierte a null en JSON
+    due: Optional[str] = None  # Puede ser None, FastAPI lo convierte a null en JSON
     lat: Optional[float] = None
     lon: Optional[float] = None
     principal: bool = False
