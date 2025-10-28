@@ -182,8 +182,9 @@ class _AuthScreenState extends State<AuthScreen>
           );
 
           switch (rol) {
-            case "admin":
+            case "administrador":
             case "super administrador":
+            case "admin":
               Navigator.pushReplacementNamed(context, '/admin_dashboard');
               break;
             case "supervisor":

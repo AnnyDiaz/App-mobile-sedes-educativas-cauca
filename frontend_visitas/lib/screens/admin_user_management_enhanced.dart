@@ -236,11 +236,37 @@ class _AdminUserManagementEnhancedState extends State<AdminUserManagementEnhance
   }
 
   Future<void> _editarUsuario(Map<String, dynamic> usuario) async {
+    // Cargar roles desde el backend
+    List<Map<String, dynamic>> roles = [];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/admin/roles'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> rolesData = jsonDecode(response.body);
+        roles = rolesData.map((r) => {'id': r['id'], 'nombre': r['nombre']}).toList();
+      }
+    } catch (e) {
+      print('Error cargando roles: $e');
+      // Usar roles por defecto si falla
+      roles = [
+        {'id': 1, 'nombre': 'Super Administrador'},
+        {'id': 2, 'nombre': 'Administrador'},
+        {'id': 3, 'nombre': 'Supervisor'},
+        {'id': 4, 'nombre': 'Visitador'},
+      ];
+    }
+    
     final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => _DialogoEditarUsuario(
         usuario: usuario,
-        roles: [], // Roles removidos - no se permite editar roles
+        roles: roles,
       ),
     );
 
@@ -572,7 +598,7 @@ class _AdminUserManagementEnhancedState extends State<AdminUserManagementEnhance
                 break;
               case 'auditoria':
                 _cargarAuditoria(usuario['id']);
-                _tabController.animateTo(2);
+                _tabController.animateTo(1); // Cambiar al tab de Auditoría (índice 1)
                 break;
               case 'eliminar':
                 _eliminarUsuario(usuario);

@@ -1,21 +1,27 @@
 // lib/config.dart
 
-// CONFIGURACIÓN PARA DIFERENTES ENTORNOS
-// Descomenta la línea que corresponda a tu entorno
+import 'package:flutter/foundation.dart';
 
-// 🏠 DESARROLLO LOCAL (Emulador Android)
-//const String baseUrl = 'http://10.0.2.2:8000'; // Para emulador Android
+/// Configuración de URL base según plataforma
+/// En web: usa la IP del servidor backend
+/// En móvil: usa configuración específica para cada plataforma
+String getBaseUrl() {
+  // SIEMPRE usar la IP del backend para web y pruebas
+  // Para web, móvil o desktop, todos usan la misma IP del servidor
+  return 'http://192.168.1.87:8000';
+}
 
-// 🖥️ DESARROLLO LOCAL (Dispositivo real - IP de tu computadora)
-//const String baseUrl = 'http://192.168.1.83:8000';  // Tu IP real
-//const String baseUrl = 'http://localhost:8000';  // Para pruebas locales y web
+// URL base configurada automáticamente según plataforma
+final String baseUrl = getBaseUrl();
 
-// 🐳 DOCKER CONTAINER (Servidor en contenedor)
-const String baseUrl = 'http://localhost:8000'; // Para Docker local
-//const String baseUrl = 'http://192.168.1.60:8000'; // IP del contenedor Docker
+// 📱 DISPOSITIVO REAL (IP de Windows - obtener con 'ipconfig' en PowerShell)
+//const String baseUrl = 'http://192.168.1.XXX:8000';
 
-// 🌐 PRODUCCIÓN (Servidor remoto)
-// const String baseUrl = 'http://138.0.90.98:1912';
+// 🐳 WSL2 (para pruebas desde WSL2)
+//const String baseUrl = 'http://172.25.232.170:8000';
+
+// 🌐 PRODUCCIÓN
+//const String baseUrl = 'http://138.0.90.98:1912';
 
 // 📱 NOTAS IMPORTANTES:
 // 1. Para EMULADOR: usa 10.0.2.2:8000

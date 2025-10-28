@@ -148,7 +148,7 @@ class ApiService {
         'nombre': nombre,
         'correo': email,
         'contrasena': password,
-        'rol_id': 1, // Rol Visitador
+        'rol_id': 4, // Rol Visitador (ID: 1=Super Admin, 2=Admin, 3=Supervisor, 4=Visitador)
       }),
     );
 
@@ -232,7 +232,7 @@ class ApiService {
       };
 
       final response = await http.put(
-        Uri.parse('$baseUrl/api/cambiar-contrasena'),
+        Uri.parse('$baseUrl/api/auth/cambiar-contrasena'),
         headers: headers,
         body: jsonEncode(body),
       );
@@ -417,7 +417,7 @@ class ApiService {
   Future<List<Usuario>> getUsuarios() async {
     try {
       final headers = await _getHeaders();
-      final url = '$baseUrl/api/usuarios';
+      final url = '$baseUrl/api/admin/usuarios';
       print('🔗 Solicitando todos los usuarios a: $url');
       
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -1565,11 +1565,11 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/api/usuarios'),
+        Uri.parse('$baseUrl/api/admin/usuarios'),
         headers: headers,
       );
 
-      print('🔗 Obteniendo todos los usuarios desde: $baseUrl/api/usuarios');
+      print('🔗 Obteniendo todos los usuarios desde: $baseUrl/api/admin/usuarios');
       print('📌 Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
