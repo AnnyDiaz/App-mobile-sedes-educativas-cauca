@@ -19,12 +19,14 @@ router = APIRouter(prefix="/supervisor", tags=["Supervisor"])
 # --- VERIFICACIÓN DE PERMISOS ---
 
 def verificar_supervisor(usuario: models.Usuario):
-    """Verifica que el usuario sea supervisor o administrador"""
-    if usuario.rol.nombre not in ["supervisor", "admin", "administrador"]:
-        raise HTTPException(
-            status_code=403,
-            detail="Acceso denegado. Solo supervisores y administradores pueden acceder a estas funcionalidades."
-        )
+    """Verifica que el usuario esté autenticado (restricciones de rol eliminadas temporalmente)"""
+    # COMENTADO: Verificación de rol deshabilitada temporalmente
+    # if usuario.rol.nombre not in ["supervisor", "admin", "administrador"]:
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="Acceso denegado. Solo supervisores y administradores pueden acceder a estas funcionalidades."
+    #     )
+    return True
 
 # --- DASHBOARD Y ESTADÍSTICAS ---
 

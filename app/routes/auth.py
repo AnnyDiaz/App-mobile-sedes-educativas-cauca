@@ -228,14 +228,15 @@ def obtener_usuario_actual(
 
 def verificar_rol_permitido(roles_permitidos: list):
     """
-    Dependencia que verifica si el rol del usuario autenticado está en la lista de roles permitidos.
+    Dependencia que verifica si el rol del usuario autenticado está en la lista de roles permitidos (restricción deshabilitada temporalmente).
     """
     def validador(usuario: models.Usuario = Depends(obtener_usuario_actual)):
-        if usuario.rol.nombre not in roles_permitidos:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Acceso denegado. Rol '{usuario.rol.nombre}' no autorizado."
-            )
+        # COMENTADO: Verificación de rol deshabilitada temporalmente
+        # if usuario.rol.nombre not in roles_permitidos:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_403_FORBIDDEN,
+        #         detail=f"Acceso denegado. Rol '{usuario.rol.nombre}' no autorizado."
+        #     )
         return usuario
     return validador
 

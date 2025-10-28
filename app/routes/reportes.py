@@ -59,10 +59,12 @@ def generar_reporte(
             # Los administradores pueden ver todas las visitas
             print(f"👑 Admin: acceso total a todas las visitas")
         else:
-            raise HTTPException(
-                status_code=403,
-                detail="Rol no autorizado para generar reportes"
-            )
+            # COMENTADO: Restricción de rol deshabilitada temporalmente
+            # raise HTTPException(
+            #     status_code=403,
+            #     detail="Rol no autorizado para generar reportes"
+            # )
+            pass
         
         # Aplicar filtros (solo si se proporcionan)
         print(f"🔍 Filtros recibidos:")
