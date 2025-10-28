@@ -82,11 +82,11 @@ InstitucionResponse = InstitucionOut
 class SedeEducativaOut(BaseModel):
     id: int
     nombre: str
-    dane: str
-    due: str
-    lat: Optional[float]
-    lon: Optional[float]
-    principal: bool
+    dane: Optional[str] = ""  # Puede ser None, convertimos a string vacío
+    due: Optional[str] = ""  # Puede ser None, convertimos a string vacío
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    principal: bool = False
     # Anidamos los objetos completos para tener toda la info
     municipio: MunicipioOut
     institucion: InstitucionOut

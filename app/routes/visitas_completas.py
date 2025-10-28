@@ -283,10 +283,22 @@ def crear_visita_completa_pae(
         
         db.commit()
         
-        # Retornar la visita completa con relaciones
-        return db.query(models.VisitaCompletaPAE).filter(
+        # Retornar la visita completa con relaciones cargadas
+        from sqlalchemy.orm import joinedload
+        visita_retornar = db.query(models.VisitaCompletaPAE).options(
+            joinedload(models.VisitaCompletaPAE.municipio),
+            joinedload(models.VisitaCompletaPAE.institucion),
+            joinedload(models.VisitaCompletaPAE.sede),
+            joinedload(models.VisitaCompletaPAE.profesional),
+            joinedload(models.VisitaCompletaPAE.respuestas_checklist)
+        ).filter(
             models.VisitaCompletaPAE.id == visita_completa.id
         ).first()
+        
+        if not visita_retornar:
+            raise HTTPException(status_code=500, detail="Error al recuperar la visita creada")
+        
+        return visita_retornar
         
     except HTTPException:
         # Re-lanzar excepciones HTTP sin modificar
