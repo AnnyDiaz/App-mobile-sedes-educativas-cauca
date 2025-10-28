@@ -119,9 +119,9 @@ def listar_visitas_para_admin(
     Endpoint unificado para listar visitas. Los administradores pueden ver todo.
     Los demás usuarios deben usar /visitas/mis-visitas.
     """
-    # Verificación de rol
-    if usuario.rol.nombre != 'admin':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para ver todas las visitas.")
+    # COMENTADO: Verificación de rol deshabilitada temporalmente
+    # if usuario.rol.nombre != 'admin':
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para ver todas las visitas.")
 
     # NOTA: Este endpoint usa el modelo Visita que ya no existe
     # Se mantiene comentado por compatibilidad histórica

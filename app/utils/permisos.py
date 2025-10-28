@@ -5,27 +5,27 @@ from app import models
 
 def verificar_permiso_eliminar(usuario: models.Usuario):
     """
-    Verifica si el usuario tiene permisos para eliminar registros.
-    Los supervisores NO pueden eliminar registros por política de seguridad.
+    Verifica si el usuario tiene permisos para eliminar registros (restricciones eliminadas temporalmente).
     """
-    if usuario.rol.nombre == "supervisor":
-        raise HTTPException(
-            status_code=403,
-            detail="Acceso denegado. Los supervisores no pueden eliminar registros por motivos de seguridad y auditoría."
-        )
+    # COMENTADO: Restricción de supervisor deshabilitada temporalmente
+    # if usuario.rol.nombre == "supervisor":
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="Acceso denegado. Los supervisores no pueden eliminar registros por motivos de seguridad y auditoría."
+    #     )
     
     return True
 
 def verificar_permiso_modificar_historico(usuario: models.Usuario):
     """
-    Verifica si el usuario puede modificar registros históricos.
-    Los supervisores tienen limitaciones en modificaciones históricas.
+    Verifica si el usuario puede modificar registros históricos (restricciones eliminadas temporalmente).
     """
-    if usuario.rol.nombre == "supervisor":
-        raise HTTPException(
-            status_code=403,
-            detail="Acceso denegado. Los supervisores no pueden modificar registros históricos por motivos de auditoría."
-        )
+    # COMENTADO: Restricción de supervisor deshabilitada temporalmente
+    # if usuario.rol.nombre == "supervisor":
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="Acceso denegado. Los supervisores no pueden modificar registros históricos por motivos de auditoría."
+    #     )
     
     return True
 

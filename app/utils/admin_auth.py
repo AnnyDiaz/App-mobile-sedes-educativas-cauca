@@ -15,19 +15,21 @@ from app.utils.auth_utils import SECRET_KEY, ALGORITHM
 
 def verificar_admin(usuario: models.Usuario = Depends(get_current_user)):
     """
-    Verifica que el usuario tenga rol de administrador.
+    Verifica que el usuario esté autenticado (restricciones de rol eliminadas temporalmente).
     """
-    if usuario.rol.nombre.lower() != "administrador":
-        raise HTTPException(
-            status_code=403,
-            detail="Acceso denegado. Solo administradores pueden acceder a esta funcionalidad."
-        )
+    # COMENTADO: Verificación de rol deshabilitada temporalmente
+    # if usuario.rol.nombre.lower() != "administrador":
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="Acceso denegado. Solo administradores pueden acceder a esta funcionalidad."
+    #     )
     
-    if not usuario.activo:
-        raise HTTPException(
-            status_code=403,
-            detail="Usuario desactivado. Contacte al administrador."
-        )
+    # COMENTADO: Verificación de estado deshabilitada temporalmente
+    # if not usuario.activo:
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="Usuario desactivado. Contacte al administrador."
+    #     )
     
     return usuario
 
