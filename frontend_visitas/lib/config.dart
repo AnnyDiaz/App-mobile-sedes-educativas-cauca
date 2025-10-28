@@ -3,11 +3,15 @@
 import 'package:flutter/foundation.dart';
 
 /// Configuración de URL base según plataforma
-/// En web: usa la IP del servidor backend
+/// En web: usa localhost o la IP del servidor backend
 /// En móvil: usa configuración específica para cada plataforma
 String getBaseUrl() {
-  // SIEMPRE usar la IP del backend para web y pruebas
-  // Para web, móvil o desktop, todos usan la misma IP del servidor
+  // Para WEB: usar la IP específica del servidor
+  if (kIsWeb) {
+    return 'http://192.168.1.87:8000';
+  }
+  
+  // Para MÓVIL: usar la IP del servidor
   return 'http://192.168.1.87:8000';
 }
 

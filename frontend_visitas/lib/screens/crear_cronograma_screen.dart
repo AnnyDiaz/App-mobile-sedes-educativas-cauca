@@ -1612,12 +1612,25 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Toma una foto de la firma o evidencia adicional relacionada con la visita (opcional)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.blue[600],
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Toma una foto de la firma o evidencia adicional relacionada con la visita',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blue[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      ' *',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.red[600],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 
@@ -1990,6 +2003,16 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
     if (_casoAtencionPrioritaria == null) {
       print('❌ FALLA: Caso de atención prioritaria no seleccionado');
       _mostrarError('Debes seleccionar el caso de atención prioritaria.');
+      return false;
+    }
+    if (_firmaUsuario == null) {
+      print('❌ FALLA: Firma digital no capturada');
+      _mostrarError('Debes capturar tu firma digital.');
+      return false;
+    }
+    if (_imagenAdicional == null) {
+      print('❌ FALLA: Foto de firma adicional no seleccionada');
+      _mostrarError('Debes tomar una foto de la firma o evidencia adicional.');
       return false;
     }
     if (_profesionalId == null) {
