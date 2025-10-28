@@ -106,11 +106,11 @@ class SedeEducativaSimpleOut(BaseModel):
 class SedeEducativaBasicaOut(BaseModel):
     id: int
     nombre: str
-    dane: str
-    due: str
-    lat: Optional[float]
-    lon: Optional[float]
-    principal: bool
+    dane: Optional[str] = ""  # Permitir None o string vacío
+    due: Optional[str] = ""  # Permitir None o string vacío
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    principal: bool = False
     municipio_id: int
     institucion_id: int
 
