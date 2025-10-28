@@ -28,15 +28,15 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # 4. Añadir el Middleware de CORS con configuración segura
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8080,http://localhost:51377,http://localhost:50063,http://localhost:3000,http://localhost:51598,http://127.0.0.1:51598,http://localhost:52388,http://127.0.0.1:52388,http://localhost:53924,http://127.0.0.1:53924,http://192.168.1.83:3000,http://192.168.1.83:8080,http://192.168.1.83:51598,http://192.168.1.83:52388,http://192.168.1.83:53924,http://localhost:5000,http://127.0.0.1:5000,http://localhost:60390,http://127.0.0.1:60390,http://localhost:*,http://127.0.0.1:*").split(",")
-origins = [origin.strip() for origin in allowed_origins]
-
+# IMPORTANTE: El middleware CORS debe estar ANTES de cualquier otro middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Para desarrollo, permite todos los orígenes
+    allow_origins=["*"],  # Para desarrollo, permite todos los orígenes (incluyendo http://localhost:*)
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permite todos los métodos HTTP (GET, POST, PUT, DELETE, OPTIONS, PATCH)
+    allow_headers=["*"],  # Permite todos los headers
+    expose_headers=["*"],  # Expone todos los headers en la respuesta
+    max_age=3600,  # Cache preflight por 1 hora
 )
 
 # 3. Crear las tablas de la base de datos

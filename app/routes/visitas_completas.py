@@ -179,7 +179,6 @@ def crear_visita_completa_pae(
             fecha_visita=datos.fecha_visita,
             contrato=datos.contrato,
             operador=datos.operador,
-            caso_atencion_prioritaria=datos.caso_atencion_prioritaria,
             municipio_id=datos.municipio_id,
             institucion_id=datos.institucion_id,
             sede_id=datos.sede_id,
@@ -188,6 +187,8 @@ def crear_visita_completa_pae(
             estado="completada",  # Se marca como completada inmediatamente
             numero_visita_usuario=numero_visita_usuario
         )
+        # Asignar caso_atencion_prioritaria usando el setter (es una propiedad)
+        visita_completa.caso_atencion_prioritaria = datos.caso_atencion_prioritaria
         
         db.add(visita_completa)
         db.flush()  # Para obtener el ID
@@ -287,8 +288,20 @@ def crear_visita_completa_pae(
             models.VisitaCompletaPAE.id == visita_completa.id
         ).first()
         
+    except HTTPException:
+        # Re-lanzar excepciones HTTP sin modificar
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"❌ === ERROR AL CREAR VISITA COMPLETA PAE ===")
+        print(f"❌ Tipo de error: {type(e).__name__}")
+        print(f"❌ Mensaje: {str(e)}")
+        print(f"❌ Traceback completo:")
+        print(error_traceback)
+        print(f"❌ Datos recibidos: {datos}")
         raise HTTPException(
             status_code=500,
             detail=f"Error al crear visita completa: {str(e)}"

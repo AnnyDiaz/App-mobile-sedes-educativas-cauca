@@ -180,7 +180,7 @@ def obtener_mis_visitas_asignadas(
             visita_out = schemas.VisitaAsignadaOut(
                 id=visita.id,
                 sede_id=visita.sede_id,
-                sede_nombre=sede.nombre if sede else "Sede no encontrada",
+                sede_nombre=sede.nombre_sede if sede else "Sede no encontrada",
                 visitador_id=visita.visitador_id,
                 visitador_nombre=usuario_actual.nombre,
                 supervisor_id=visita.supervisor_id,

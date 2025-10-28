@@ -551,15 +551,41 @@ class ApiService {
       };
 
       final url = '$baseUrl/api/visitas-completas-pae';
-      print('🔗 Enviando cronograma a: $url');
+      print('🔗 === INICIANDO ENVÍO DE CRONOGRAMA ===');
+      print('🔗 URL: $url');
+      print('🔗 Base URL: $baseUrl');
       print('🔑 Headers: $headers');
       print('📦 Body: $body');
       print('📋 Respuestas checklist incluidas: ${respuestasChecklist?.length ?? 0} items');
 
-      final response = await http.post(
+      // Verificar conectividad antes de enviar
+      try {
+        final testFuture = http.get(
+          Uri.parse('$baseUrl/'),
+          headers: {'Content-Type': 'application/json'},
+        );
+        final testResponse = await testFuture.timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            throw Exception('Timeout: No se pudo conectar en 5 segundos');
+          },
+        );
+        print('✅ Conexión al servidor verificada: ${testResponse.statusCode}');
+      } catch (testError) {
+        print('❌ Error al verificar conexión: $testError');
+        throw Exception('No se pudo conectar con el servidor en $baseUrl. Verifica que el contenedor esté corriendo y accesible.');
+      }
+
+      final postFuture = http.post(
         Uri.parse(url),
         headers: headers,
         body: jsonEncode(body),
+      );
+      final response = await postFuture.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Timeout: El servidor tardó demasiado en responder');
+        },
       );
 
       // Verificar si es un error de autenticación
@@ -586,13 +612,40 @@ class ApiService {
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
+      print('❌ === ERROR AL CREAR CRONOGRAMA ===');
+      print('❌ Tipo de error: ${e.runtimeType}');
+      print('❌ Mensaje: $e');
+      print('❌ Base URL intentada: $baseUrl');
+      
       // Verificar si es un error de autenticación
       if (e.toString().contains('UNAUTHORIZED') || e.toString().contains('401') || e.toString().contains('Unauthorized')) {
         await logout(); // Limpiar token expirado
         throw Exception('UNAUTHORIZED');
       }
       
-      throw Exception('Error al crear cronograma PAE: $e');
+      // Detectar errores de conexión
+      if (e.toString().contains('Failed to fetch') || 
+          e.toString().contains('SocketException') || 
+          e.toString().contains('NetworkError') ||
+          e.toString().contains('ClientException') ||
+          e.toString().contains('TimeoutException') ||
+          e.toString().contains('timeout')) {
+        String mensaje = 'Error de conexión: No se pudo conectar con el servidor en $baseUrl.\n\n';
+        mensaje += 'Verifica:\n';
+        mensaje += '1. El contenedor Docker está corriendo\n';
+        mensaje += '2. La IP del servidor es correcta\n';
+        mensaje += '3. El firewall permite conexiones al puerto 8000\n';
+        mensaje += '4. Puedes acceder a $baseUrl/ en tu navegador';
+        throw Exception(mensaje);
+      }
+      
+      // Error genérico
+      String mensajeError = 'Error al crear cronograma PAE';
+      if (e.toString().isNotEmpty) {
+        mensajeError += ': ${e.toString()}';
+      }
+      
+      throw Exception(mensajeError);
     }
   }
 
