@@ -511,8 +511,13 @@ def generar_excel_visita_completa(
     """
     Genera un archivo Excel basado en la plantilla personalizada con toda la información de una visita completa PAE
     """
-    # Obtener la visita completa con todas las relaciones
-    visita = db.query(models.VisitaCompletaPAE).filter(
+    # Obtener la visita completa con todas las relaciones cargadas
+    visita = db.query(models.VisitaCompletaPAE).options(
+        joinedload(models.VisitaCompletaPAE.municipio),
+        joinedload(models.VisitaCompletaPAE.institucion),
+        joinedload(models.VisitaCompletaPAE.sede),
+        joinedload(models.VisitaCompletaPAE.profesional)
+    ).filter(
         models.VisitaCompletaPAE.id == visita_id
     ).first()
     
@@ -551,7 +556,7 @@ def generar_excel_visita_completa(
         worksheet['E2'] = visita.caso_atencion_prioritaria or 'N/A'
         worksheet['F2'] = visita.municipio.nombre if visita.municipio else 'N/A'
         worksheet['G2'] = visita.institucion.nombre if visita.institucion else 'N/A'
-        worksheet['H2'] = visita.sede.nombre if visita.sede else 'N/A'
+        worksheet['H2'] = visita.sede.nombre_sede if visita.sede else 'N/A'  # Usar nombre_sede en lugar de nombre
         worksheet['I2'] = visita.profesional.nombre if visita.profesional else 'N/A'
         
         # Llenar las respuestas del checklist
@@ -575,7 +580,7 @@ def generar_excel_visita_completa(
                 worksheet[f'E{fila_actual}'] = visita.caso_atencion_prioritaria or 'N/A'  # Caso Prioritario
                 worksheet[f'F{fila_actual}'] = visita.municipio.nombre if visita.municipio else 'N/A'  # Municipio
                 worksheet[f'G{fila_actual}'] = visita.institucion.nombre if visita.institucion else 'N/A'  # Institución
-                worksheet[f'H{fila_actual}'] = visita.sede.nombre if visita.sede else 'N/A'  # Sede
+                worksheet[f'H{fila_actual}'] = visita.sede.nombre_sede if visita.sede else 'N/A'  # Sede
                 worksheet[f'I{fila_actual}'] = visita.profesional.nombre if visita.profesional else 'N/A'  # Profesional
                 worksheet[f'J{fila_actual}'] = item.id  # Nº Ítem
                 worksheet[f'K{fila_actual}'] = item.pregunta_texto  # Pregunta / Descripción
@@ -597,7 +602,13 @@ def generar_excel_visita_completa(
         )
         
     except Exception as e:
-        print(f"❌ Error al generar Excel con plantilla: {str(e)}")
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"❌ === ERROR AL GENERAR EXCEL ===")
+        print(f"❌ Tipo de error: {type(e).__name__}")
+        print(f"❌ Mensaje: {str(e)}")
+        print(f"❌ Traceback completo:")
+        print(error_traceback)
         raise HTTPException(
             status_code=500,
             detail=f"Error al generar Excel: {str(e)}"

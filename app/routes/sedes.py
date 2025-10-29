@@ -190,7 +190,7 @@ def crear_sede(
         
         # Crear la nueva sede
         nueva_sede = SedeEducativa(
-            nombre=sede_data.nombre,
+            nombre_sede=sede_data.nombre,
             dane=sede_data.dane,
             due=sede_data.due,
             lat=sede_data.lat,
@@ -204,7 +204,7 @@ def crear_sede(
         db.commit()
         db.refresh(nueva_sede)
         
-        print(f"✅ Nueva sede creada por {usuario.nombre} ({usuario.rol.nombre}): {nueva_sede.nombre} (ID: {nueva_sede.id})")
+        print(f"✅ Nueva sede creada por {usuario.nombre} ({usuario.rol.nombre}): {nueva_sede.nombre_sede} (ID: {nueva_sede.id})")
         print(f"   - DANE: {nueva_sede.dane}")
         print(f"   - DUE: {nueva_sede.due}")
         print(f"   - Municipio: {municipio.nombre}")
@@ -282,7 +282,7 @@ def actualizar_sede(
         
         # Actualizar los campos proporcionados
         if sede_data.nombre is not None:
-            sede.nombre = sede_data.nombre
+            sede.nombre_sede = sede_data.nombre
         if sede_data.dane is not None:
             sede.dane = sede_data.dane
         if sede_data.due is not None:
@@ -301,7 +301,7 @@ def actualizar_sede(
         db.commit()
         db.refresh(sede)
         
-        print(f"✅ Sede actualizada por {usuario.nombre} ({usuario.rol.nombre}): {sede.nombre} (ID: {sede.id})")
+        print(f"✅ Sede actualizada por {usuario.nombre} ({usuario.rol.nombre}): {sede.nombre_sede} (ID: {sede.id})")
         print(f"   - DANE: {sede.dane}")
         print(f"   - DUE: {sede.due}")
         
@@ -345,7 +345,7 @@ def eliminar_sede(
                 detail=f"No se puede eliminar la sede porque tiene {visitas_count + visitas_pae_count} visita(s) asociada(s)"
             )
         
-        nombre_sede = sede.nombre
+        nombre_sede = sede.nombre_sede
         db.delete(sede)
         db.commit()
         

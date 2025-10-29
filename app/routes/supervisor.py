@@ -164,7 +164,7 @@ def obtener_visitas_equipo(
                 "visitador_id": visitador.id,
                 "visitador_nombre": visitador.nombre,
                 "sede_id": sede.id,
-                "sede_nombre": sede.nombre,
+                "sede_nombre": sede.nombre_sede,
                 "municipio_nombre": municipio.nombre,
                 "institucion_nombre": institucion.nombre,
                 "fecha_programada": visita.fecha_programada.isoformat(),
@@ -263,7 +263,7 @@ def obtener_sedes_disponibles(
         for sede in sedes:
             sedes_formateadas.append({
                 "id": sede.id,
-                "nombre": sede.nombre,
+                "nombre": sede.nombre_sede,
                 "dane": sede.dane,
                 "due": sede.due,
                 "municipio": sede.municipio.nombre,
@@ -462,7 +462,7 @@ def asignar_visita(
             "mensaje": "Visita asignada exitosamente",
             "visita_id": nueva_visita.id,
             "visitador": visitador.nombre,
-            "sede": sede.nombre,
+            "sede": sede.nombre_sede,
             "fecha_programada": nueva_visita.fecha_programada
         }
         
