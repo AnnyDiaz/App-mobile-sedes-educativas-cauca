@@ -301,13 +301,13 @@ class NotificacionesService:
                     
                     request = NotificacionPushRequest(
                         titulo="Visita Próxima",
-                        mensaje=f"Tienes una visita programada en {horas_restantes} horas en {visita.sede.nombre}",
+                        mensaje=f"Tienes una visita programada en {horas_restantes} horas en {visita.sede.nombre_sede}",
                         tipo="visita_proxima",
                         prioridad="alta",
                         usuario_ids=[visita.visitador_id],
                         datos_adicionales={
                             "visita_id": visita.id,
-                            "sede_nombre": visita.sede.nombre,
+                            "sede_nombre": visita.sede.nombre_sede,
                             "fecha_programada": visita.fecha_programada.isoformat()
                         }
                     )
@@ -329,13 +329,13 @@ class NotificacionesService:
                     
                     request = NotificacionPushRequest(
                         titulo="Visita Vencida",
-                        mensaje=f"Tienes una visita vencida hace {dias_vencida} días en {visita.sede.nombre}",
+                        mensaje=f"Tienes una visita vencida hace {dias_vencida} días en {visita.sede.nombre_sede}",
                         tipo="visita_vencida",
                         prioridad="urgente",
                         usuario_ids=[visita.visitador_id],
                         datos_adicionales={
                             "visita_id": visita.id,
-                            "sede_nombre": visita.sede.nombre,
+                            "sede_nombre": visita.sede.nombre_sede,
                             "fecha_programada": visita.fecha_programada.isoformat(),
                             "dias_vencida": dias_vencida
                         }

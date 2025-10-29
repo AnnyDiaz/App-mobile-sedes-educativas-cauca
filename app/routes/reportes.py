@@ -147,7 +147,7 @@ def generar_reporte(
                 "observaciones": visita.observaciones,
                 "municipio": visita.municipio.nombre if visita.municipio else "N/A",
                 "institucion": visita.institucion.nombre if visita.institucion else "N/A",
-                "sede": visita.sede.nombre if visita.sede else "N/A",
+                "sede": visita.sede.nombre_sede if visita.sede else "N/A",
                 "profesional": visita.profesional.nombre if visita.profesional else "N/A",
             })
         

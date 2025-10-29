@@ -109,7 +109,7 @@ def asignar_visita(
         return schemas.VisitaAsignadaOut(
             id=nueva_visita.id,
             sede_id=nueva_visita.sede_id,
-            sede_nombre=sede.nombre,
+            sede_nombre=sede.nombre_sede,
             visitador_id=nueva_visita.visitador_id,
             visitador_nombre=visitador.nombre,
             supervisor_id=nueva_visita.supervisor_id,
@@ -260,7 +260,7 @@ def obtener_visitas_asignadas_por_supervisor(
             visita_out = schemas.VisitaAsignadaOut(
                 id=visita.id,
                 sede_id=visita.sede_id,
-                sede_nombre=sede.nombre if sede else "Sede no encontrada",
+                sede_nombre=sede.nombre_sede if sede else "Sede no encontrada",
                 visitador_id=visita.visitador_id,
                 visitador_nombre=visitador.nombre if visitador else "Visitador no encontrado",
                 supervisor_id=visita.supervisor_id,

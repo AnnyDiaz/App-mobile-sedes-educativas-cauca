@@ -132,7 +132,7 @@ def obtener_actividad_reciente(
                     "fecha_creacion": visita.fecha_creacion,
                     "estado": visita.estado,
                     "profesional": visita.profesional.nombre,
-                    "sede": visita.sede.nombre,
+                    "sede": visita.sede.nombre_sede,
                     "municipio": visita.municipio.nombre
                 }
                 for visita in ultimas_visitas

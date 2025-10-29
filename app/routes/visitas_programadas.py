@@ -109,7 +109,7 @@ def obtener_visitas_programadas(
             resultado.append(VisitaProgramadaOut(
                 id=visita.id,
                 sede_id=visita.sede_id,
-                sede_nombre=visita.sede.nombre if visita.sede else "N/A",
+                sede_nombre=visita.sede.nombre_sede if visita.sede else "N/A",
                 visitador_id=visita.visitador_id,
                 visitador_nombre=visita.visitador.nombre if visita.visitador else "N/A",
                 fecha_programada=visita.fecha_programada,
@@ -194,7 +194,7 @@ def crear_visita_programada(
         return VisitaProgramadaOut(
             id=nueva_visita.id,
             sede_id=nueva_visita.sede_id,
-            sede_nombre=sede.nombre,
+            sede_nombre=sede.nombre_sede,
             visitador_id=nueva_visita.visitador_id,
             visitador_nombre=visitador.nombre,
             fecha_programada=nueva_visita.fecha_programada,
@@ -253,7 +253,7 @@ def obtener_mis_visitas_programadas(
             visita_out = VisitaProgramadaOut(
                 id=visita.id,
                 sede_id=visita.sede_id,
-                sede_nombre=sede.nombre if sede else "Sede no encontrada",
+                sede_nombre=sede.nombre_sede if sede else "Sede no encontrada",
                 visitador_id=visita.visitador_id,
                 visitador_nombre=usuario_actual.nombre,
                 fecha_programada=visita.fecha_programada,
@@ -359,7 +359,7 @@ def obtener_todas_visitas_usuario(
             resultado.append(VisitaProgramadaOut(
                 id=visita.id,
                 sede_id=visita.sede_id,
-                sede_nombre=visita.sede.nombre if visita.sede else "N/A",
+                sede_nombre=visita.sede.nombre_sede if visita.sede else "N/A",
                 visitador_id=visita.visitador_id,
                 visitador_nombre=visita.visitador.nombre if visita.visitador else "N/A",
                 fecha_programada=visita.fecha_programada,
@@ -391,7 +391,7 @@ def obtener_todas_visitas_usuario(
                 resultado.append(VisitaProgramadaOut(
                     id=visita.id,
                     sede_id=visita.sede_id,
-                    sede_nombre=visita.sede.nombre if visita.sede else "N/A",
+                    sede_nombre=visita.sede.nombre_sede if visita.sede else "N/A",
                     visitador_id=visita.visitador_id,
                     visitador_nombre=visita.visitador.nombre if visita.visitador else "N/A",
                     fecha_programada=visita.fecha_programada,
