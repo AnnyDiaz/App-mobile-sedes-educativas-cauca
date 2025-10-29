@@ -14,7 +14,8 @@ except ImportError:
 from io import BytesIO
 from fastapi.responses import StreamingResponse
 import os
-from openpyxl import load_workbook
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 from app import models, schemas
 from app.database import get_db
@@ -530,93 +531,57 @@ def generar_excel_visita_completa(
     ).all()
     
     try:
-        # Cargar la plantilla Excel
-        # Obtener el directorio base del proyecto (donde está app/)
-        import pathlib
-        current_file = pathlib.Path(__file__)
-        base_dir = current_file.parent.parent.parent  # Desde routes/ -> app/ -> proyecto/
-        app_dir = current_file.parent.parent  # app/
+        # Crear un nuevo workbook de Excel desde cero
+        print(f"📝 Creando nuevo workbook Excel...")
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Visita Completa"
         
-        print(f"🔍 Directorio actual del archivo: {current_file}")
-        print(f"🔍 Directorio base del proyecto: {base_dir}")
-        print(f"🔍 Directorio app: {app_dir}")
-        print(f"🔍 Directorio de trabajo actual: {os.getcwd()}")
+        # Definir estilos
+        header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
         
-        # Verificar si existe el directorio templates
-        templates_dir = app_dir / "templates"
-        print(f"🔍 Directorio templates existe: {templates_dir.exists()}")
-        if templates_dir.exists():
-            archivos = list(templates_dir.iterdir())
-            print(f"🔍 Archivos en templates: {[f.name for f in archivos]}")
-        
-        # Intentar múltiples rutas para compatibilidad con local y Docker
-        posibles_rutas = [
-            str(app_dir / "templates" / "plantilla_historial_visitas_checklist.xlsx"),
-            os.path.join("app", "templates", "plantilla_historial_visitas_checklist.xlsx"),
-            os.path.join("templates", "plantilla_historial_visitas_checklist.xlsx"),
+        # Crear encabezados (fila 1)
+        print(f"📋 Creando encabezados del Excel...")
+        headers = [
+            'ID Visita', 'Fecha', 'Contrato', 'Operador', 'Caso Prioritario',
+            'Municipio', 'Institución', 'Sede', 'Profesional', 'Item ID', 
+            'Pregunta', 'Respuesta', 'Observaciones', 'Evidencia'
         ]
         
-        plantilla_path = None
-        for ruta in posibles_rutas:
-            abs_path = os.path.abspath(ruta)
-            print(f"🔍 Intentando ruta: {ruta} -> {abs_path}")
-            if os.path.exists(ruta):
-                plantilla_path = ruta
-                print(f"✅ Plantilla encontrada en: {plantilla_path} ({abs_path})")
-                break
+        for col_idx, header in enumerate(headers, start=1):
+            cell = worksheet.cell(row=1, column=col_idx)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
         
-        if not plantilla_path:
-            print(f"❌ Plantilla no encontrada en ninguna de las rutas probadas: {posibles_rutas}")
-            # Listar estructura de directorios para debugging
-            try:
-                print(f"🔍 Estructura /app: {list(pathlib.Path('/app').iterdir())}")
-                print(f"🔍 Estructura /app/app: {list((pathlib.Path('/app') / 'app').iterdir()) if (pathlib.Path('/app') / 'app').exists() else 'NO EXISTE'}")
-            except:
-                pass
-            raise HTTPException(
-                status_code=500,
-                detail=f"Plantilla Excel no encontrada. Contacte al administrador."
-            )
+        # Ajustar ancho de columnas
+        worksheet.column_dimensions['A'].width = 12
+        worksheet.column_dimensions['B'].width = 18
+        worksheet.column_dimensions['C'].width = 15
+        worksheet.column_dimensions['D'].width = 15
+        worksheet.column_dimensions['E'].width = 18
+        worksheet.column_dimensions['F'].width = 20
+        worksheet.column_dimensions['G'].width = 25
+        worksheet.column_dimensions['H'].width = 30
+        worksheet.column_dimensions['I'].width = 20
+        worksheet.column_dimensions['J'].width = 10
+        worksheet.column_dimensions['K'].width = 50
+        worksheet.column_dimensions['L'].width = 30
+        worksheet.column_dimensions['M'].width = 40
+        worksheet.column_dimensions['N'].width = 25
         
-        # Cargar el workbook de la plantilla
-        print(f"✅ Cargando workbook desde: {plantilla_path}")
-        workbook = load_workbook(plantilla_path)
-        print(f"✅ Workbook cargado exitosamente")
-        
-        # Obtener la hoja principal (asumiendo que es la primera)
-        worksheet = workbook.active
-        
-        # Llenar la información de la visita en la plantilla
-        # Según el análisis, la plantilla tiene encabezados en la fila 1
-        # Vamos a llenar los datos de la visita en la fila 2
-        
-        # Información de la visita (fila 2)
+        # Llenar la información de la visita
         print(f"📋 Llenando información de visita ID {visita.id}")
-        print(f"   - Sede: {visita.sede.nombre_sede if visita.sede else 'N/A'}")
-        print(f"   - Municipio: {visita.municipio.nombre if visita.municipio else 'N/A'}")
-        print(f"   - Institucion: {visita.institucion.nombre if visita.institucion else 'N/A'}")
-        
-        worksheet['A2'] = visita.id
-        worksheet['B2'] = visita.fecha_visita.strftime('%Y-%m-%d %H:%M') if visita.fecha_visita else 'N/A'
-        worksheet['C2'] = visita.contrato or 'N/A'
-        worksheet['D2'] = visita.operador or 'N/A'
-        worksheet['E2'] = visita.caso_atencion_prioritaria or 'N/A'
-        worksheet['F2'] = visita.municipio.nombre if visita.municipio else 'N/A'
-        worksheet['G2'] = visita.institucion.nombre if visita.institucion else 'N/A'
-        
-        # Verificar que la sede existe antes de acceder a nombre_sede
-        if visita.sede:
-            worksheet['H2'] = visita.sede.nombre_sede if hasattr(visita.sede, 'nombre_sede') else 'N/A'
-        else:
-            worksheet['H2'] = 'N/A'
-            
-        worksheet['I2'] = visita.profesional.nombre if visita.profesional else 'N/A'
-        print(f"✅ Información básica de visita llenada")
-        
-        # Llenar las respuestas del checklist
-        # Comenzar desde la fila 3 (después de los encabezados)
-        print(f"📋 Procesando {len(respuestas)} respuestas del checklist")
-        fila_actual = 3
+        fila_actual = 2
         for respuesta in respuestas:
             item = db.query(models.ChecklistItem).filter(
                 models.ChecklistItem.id == respuesta.item_id
@@ -627,27 +592,28 @@ def generar_excel_visita_completa(
                     models.ChecklistCategoria.id == item.categoria_id
                 ).first()
                 
-                # Llenar fila del checklist según la estructura de la plantilla
-                worksheet[f'A{fila_actual}'] = visita.id  # Nº Visita
-                worksheet[f'B{fila_actual}'] = visita.fecha_visita.strftime('%Y-%m-%d %H:%M') if visita.fecha_visita else 'N/A'  # Fecha Visita
-                worksheet[f'C{fila_actual}'] = visita.contrato or 'N/A'  # Contrato
-                worksheet[f'D{fila_actual}'] = visita.operador or 'N/A'  # Operador
-                worksheet[f'E{fila_actual}'] = visita.caso_atencion_prioritaria or 'N/A'  # Caso Prioritario
-                worksheet[f'F{fila_actual}'] = visita.municipio.nombre if visita.municipio else 'N/A'  # Municipio
-                worksheet[f'G{fila_actual}'] = visita.institucion.nombre if visita.institucion else 'N/A'  # Institución
+                # Llenar datos
+                data = [
+                    visita.id,
+                    visita.fecha_visita.strftime('%Y-%m-%d %H:%M') if visita.fecha_visita else 'N/A',
+                    visita.contrato or 'N/A',
+                    visita.operador or 'N/A',
+                    visita.caso_atencion_prioritaria or 'N/A',
+                    visita.municipio.nombre if visita.municipio else 'N/A',
+                    visita.institucion.nombre if visita.institucion else 'N/A',
+                    visita.sede.nombre_sede if visita.sede and hasattr(visita.sede, 'nombre_sede') else 'N/A',
+                    visita.profesional.nombre if visita.profesional else 'N/A',
+                    item.id,
+                    item.pregunta_texto,
+                    respuesta.respuesta,
+                    respuesta.observacion or 'N/A',
+                    'N/A'  # Evidencia
+                ]
                 
-                # Verificar que la sede existe antes de acceder a nombre_sede
-                if visita.sede:
-                    worksheet[f'H{fila_actual}'] = visita.sede.nombre_sede if hasattr(visita.sede, 'nombre_sede') else 'N/A'
-                else:
-                    worksheet[f'H{fila_actual}'] = 'N/A'
-                    
-                worksheet[f'I{fila_actual}'] = visita.profesional.nombre if visita.profesional else 'N/A'  # Profesional
-                worksheet[f'J{fila_actual}'] = item.id  # Nº Ítem
-                worksheet[f'K{fila_actual}'] = item.pregunta_texto  # Pregunta / Descripción
-                worksheet[f'L{fila_actual}'] = respuesta.respuesta  # Respuesta
-                worksheet[f'M{fila_actual}'] = respuesta.observacion or 'N/A'  # Observaciones
-                worksheet[f'N{fila_actual}'] = 'N/A'  # Evidencia (por ahora N/A)
+                for col_idx, value in enumerate(data, start=1):
+                    cell = worksheet.cell(row=fila_actual, column=col_idx)
+                    cell.value = value
+                    cell.border = border
                 
                 fila_actual += 1
         
