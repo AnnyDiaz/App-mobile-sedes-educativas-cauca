@@ -531,16 +531,27 @@ def generar_excel_visita_completa(
     
     try:
         # Cargar la plantilla Excel
-        plantilla_path = os.path.join("app", "templates", "plantilla_historial_visitas_checklist.xlsx")
-        print(f"🔍 Intentando cargar plantilla desde: {plantilla_path}")
-        print(f"🔍 Ruta absoluta: {os.path.abspath(plantilla_path)}")
-        print(f"🔍 Existe archivo: {os.path.exists(plantilla_path)}")
+        # Intentar múltiples rutas para compatibilidad con local y Docker
+        posibles_rutas = [
+            os.path.join("app", "templates", "plantilla_historial_visitas_checklist.xlsx"),
+            os.path.join("templates", "plantilla_historial_visitas_checklist.xlsx"),
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "plantilla_historial_visitas_checklist.xlsx"),
+        ]
         
-        if not os.path.exists(plantilla_path):
-            print(f"❌ Plantilla no encontrada en: {plantilla_path}")
+        plantilla_path = None
+        for ruta in posibles_rutas:
+            abs_path = os.path.abspath(ruta)
+            print(f"🔍 Intentando ruta: {ruta} -> {abs_path}")
+            if os.path.exists(ruta):
+                plantilla_path = ruta
+                print(f"✅ Plantilla encontrada en: {plantilla_path} ({abs_path})")
+                break
+        
+        if not plantilla_path:
+            print(f"❌ Plantilla no encontrada en ninguna de las rutas probadas: {posibles_rutas}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Plantilla Excel no encontrada en {plantilla_path}. Contacte al administrador."
+                detail=f"Plantilla Excel no encontrada. Contacte al administrador."
             )
         
         # Cargar el workbook de la plantilla
