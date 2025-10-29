@@ -1087,11 +1087,17 @@ def programar_visitas_masivo(
                 dia_asignado = (i * dias_total) // len(sedes)
                 fecha_visita = fecha_inicio + timedelta(days=dia_asignado)
                 
-                # Verificar conflictos en la fecha específica
+                # Verificar conflictos en la fecha específica (buscar en visitas_asignadas)
                 conflicto = db.execute(text("""
-                    SELECT id FROM visitas_programadas 
-                    WHERE sede_id = :sede_id AND DATE(fecha_programada) = DATE(:fecha_programada)
-                """), {"sede_id": sede.id, "fecha_programada": fecha_visita}).fetchone()
+                    SELECT id FROM visitas_asignadas 
+                    WHERE sede_id = :sede_id 
+                    AND visitador_id = :visitador_id
+                    AND DATE(fecha_programada) = DATE(:fecha_programada)
+                """), {
+                    "sede_id": sede.id, 
+                    "visitador_id": visitador.id,
+                    "fecha_programada": fecha_visita
+                }).fetchone()
                 
                 if not conflicto:
                     # Crear visita asignada (no visita programada)
@@ -1121,12 +1127,25 @@ def programar_visitas_masivo(
                         "tipo": tipo_visita
                     })
                 else:
-                    errores.append(f"La sede {sede.nombre_sede} ya tiene una visita programada para {fecha_visita.strftime('%Y-%m-%d')}")
+                    errores.append(f"El visitador {visitador.nombre} ya tiene una visita asignada en {sede.nombre_sede} para {fecha_visita.strftime('%Y-%m-%d')}")
             
             except Exception as e:
+                import traceback
+                error_detail = traceback.format_exc()
+                print(f"❌ Error al crear visita asignada para sede {sede.nombre_sede}: {str(e)}")
+                print(f"❌ Traceback completo:\n{error_detail}")
                 errores.append(f"Error con sede {sede.nombre_sede}: {str(e)}")
         
-        db.commit()
+        try:
+            db.commit()
+            print(f"✅ Se crearon {len(visitas_creadas)} visitas asignadas exitosamente")
+        except Exception as e:
+            db.rollback()
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"❌ Error al hacer commit: {str(e)}")
+            print(f"❌ Traceback completo:\n{error_detail}")
+            raise HTTPException(status_code=500, detail=f"Error al guardar visitas: {str(e)}")
         
         return {
             "success": True,
