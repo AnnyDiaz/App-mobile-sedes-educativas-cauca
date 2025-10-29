@@ -593,20 +593,21 @@ class ApiService {
         throw Exception('UNAUTHORIZED');
       }
 
-      // NUEVO: Sincronizar todas las visitas después de crear la visita completa
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        try {
-          print('🔄 === INICIANDO SINCRONIZACIÓN DESPUÉS DE CREAR CRONOGRAMA ===');
-          print('🔄 Sincronizando todas las visitas...');
-          final syncResult = await sincronizarTodasLasVisitas();
-          print('✅ Sincronización completada. Resultado: $syncResult');
-          print('🔄 === FIN SINCRONIZACIÓN ===');
-        } catch (e) {
-          print('⚠️ Error en sincronización: $e');
-          print('⚠️ Stack trace: ${StackTrace.current}');
-          // No fallar si la sincronización falla
-        }
-      } else {
+      // NOTA: Sincronización deshabilitada automáticamente después de crear cronograma
+      // Si necesitas sincronizar, hazlo manualmente desde el dashboard
+      // 
+      // if (response.statusCode == 200 || response.statusCode == 201) {
+      //   try {
+      //     final syncResult = await sincronizarTodasLasVisitas();
+      //     print('✅ Sincronización completada. Resultado: $syncResult');
+      //   } catch (e) {
+      //     print('⚠️ Error en sincronización: $e');
+      //   }
+      // } else {
+      //   print('❌ No se pudo crear el cronograma. Status: ${response.statusCode}');
+      // }
+      
+      if (response.statusCode != 200 && response.statusCode != 201) {
         print('❌ No se pudo crear el cronograma. Status: ${response.statusCode}');
       }
 

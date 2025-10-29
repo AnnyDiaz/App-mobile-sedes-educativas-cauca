@@ -1094,22 +1094,25 @@ def programar_visitas_masivo(
                 """), {"sede_id": sede.id, "fecha_programada": fecha_visita}).fetchone()
                 
                 if not conflicto:
-                    # Insertar usando SQL directo para evitar problemas de modelo
-                    db.execute(text("""
-                        INSERT INTO visitas_programadas 
-                        (sede_id, visitador_id, municipio_id, institucion_id, fecha_programada, contrato, operador, estado, observaciones)
-                        VALUES (:sede_id, :visitador_id, :municipio_id, :institucion_id, :fecha_programada, :contrato, :operador, :estado, :observaciones)
-                    """), {
-                        "sede_id": sede.id,
-                        "visitador_id": visitador.id,
-                        "municipio_id": sede.municipio_id,
-                        "institucion_id": sede.institucion_id,
-                        "fecha_programada": fecha_visita,
-                        "contrato": "ADMIN_MASIVO",
-                        "operador": f"Admin-{admin_user.id}",
-                        "estado": "programada",
-                        "observaciones": f"Visita {tipo_visita} programada masivamente"
-                    })
+                    # Crear visita asignada (no visita programada)
+                    from app.models import VisitaAsignada
+                    nueva_visita_asignada = VisitaAsignada(
+                        sede_id=sede.id,
+                        visitador_id=visitador.id,
+                        supervisor_id=admin_user.id,
+                        fecha_programada=fecha_visita,
+                        tipo_visita=tipo_visita,
+                        prioridad="normal",
+                        estado="pendiente",
+                        contrato="ADMIN_MASIVO",
+                        operador=f"Admin-{admin_user.id}",
+                        municipio_id=sede.municipio_id,
+                        institucion_id=sede.institucion_id,
+                        observaciones=f"Visita {tipo_visita} programada masivamente",
+                        fecha_creacion=datetime.utcnow()
+                    )
+                    
+                    db.add(nueva_visita_asignada)
                     
                     visitas_creadas.append({
                         "sede_nombre": sede.nombre_sede,

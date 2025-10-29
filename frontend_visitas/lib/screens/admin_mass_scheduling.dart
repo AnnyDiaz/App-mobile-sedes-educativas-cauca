@@ -808,7 +808,7 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
         return Colors.blue.withOpacity(0.1);
       case 'pendiente':
       default:
-        return Colors.grey.withOpacity(0.1);
+        return Colors.blue.withOpacity(0.05); // Cambio: azul muy claro en lugar de gris
     }
   }
 
@@ -821,7 +821,7 @@ class _AdminMassSchedulingScreenState extends State<AdminMassSchedulingScreen>
         return Colors.blue;
       case 'pendiente':
       default:
-        return Colors.grey;
+        return Colors.blue.shade300; // Cambio: azul claro en lugar de gris
     }
   }
 }
