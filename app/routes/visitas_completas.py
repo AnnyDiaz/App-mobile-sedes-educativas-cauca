@@ -531,11 +531,29 @@ def generar_excel_visita_completa(
     
     try:
         # Cargar la plantilla Excel
+        # Obtener el directorio base del proyecto (donde está app/)
+        import pathlib
+        current_file = pathlib.Path(__file__)
+        base_dir = current_file.parent.parent.parent  # Desde routes/ -> app/ -> proyecto/
+        app_dir = current_file.parent.parent  # app/
+        
+        print(f"🔍 Directorio actual del archivo: {current_file}")
+        print(f"🔍 Directorio base del proyecto: {base_dir}")
+        print(f"🔍 Directorio app: {app_dir}")
+        print(f"🔍 Directorio de trabajo actual: {os.getcwd()}")
+        
+        # Verificar si existe el directorio templates
+        templates_dir = app_dir / "templates"
+        print(f"🔍 Directorio templates existe: {templates_dir.exists()}")
+        if templates_dir.exists():
+            archivos = list(templates_dir.iterdir())
+            print(f"🔍 Archivos en templates: {[f.name for f in archivos]}")
+        
         # Intentar múltiples rutas para compatibilidad con local y Docker
         posibles_rutas = [
+            str(app_dir / "templates" / "plantilla_historial_visitas_checklist.xlsx"),
             os.path.join("app", "templates", "plantilla_historial_visitas_checklist.xlsx"),
             os.path.join("templates", "plantilla_historial_visitas_checklist.xlsx"),
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "plantilla_historial_visitas_checklist.xlsx"),
         ]
         
         plantilla_path = None
@@ -549,6 +567,12 @@ def generar_excel_visita_completa(
         
         if not plantilla_path:
             print(f"❌ Plantilla no encontrada en ninguna de las rutas probadas: {posibles_rutas}")
+            # Listar estructura de directorios para debugging
+            try:
+                print(f"🔍 Estructura /app: {list(pathlib.Path('/app').iterdir())}")
+                print(f"🔍 Estructura /app/app: {list((pathlib.Path('/app') / 'app').iterdir()) if (pathlib.Path('/app') / 'app').exists() else 'NO EXISTE'}")
+            except:
+                pass
             raise HTTPException(
                 status_code=500,
                 detail=f"Plantilla Excel no encontrada. Contacte al administrador."
