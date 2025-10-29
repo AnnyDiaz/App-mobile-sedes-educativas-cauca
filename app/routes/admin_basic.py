@@ -1234,7 +1234,7 @@ def cancelar_visitas_masivo(
         
         # Actualizar visitas usando SQL directo
         visitas_canceladas = db.execute(text("""
-            UPDATE visitas_programadas 
+            UPDATE visitas_asignadas 
             SET estado = 'cancelada' 
             WHERE id = ANY(:visitas_ids)
         """), {"visitas_ids": visitas_ids}).rowcount
@@ -1541,7 +1541,7 @@ def _generar_reporte_visitas_completas(db, filtros, formato, timestamp, export_d
                 vc.fecha_visita,
                 vc.contrato as asunto,
                 vc.observaciones as observaciones_visita
-            FROM visitas_programadas vp
+            FROM visitas_asignadas vp
             LEFT JOIN sedes_educativas se ON vp.sede_id = se.id
             LEFT JOIN usuarios u ON vp.visitador_id = u.id
             LEFT JOIN visitas_completas_pae vc ON vp.sede_id = vc.sede_id 
@@ -1942,7 +1942,7 @@ def _generar_consolidado_sedes(db, filtros, formato, timestamp, export_dir, admi
         FROM sedes_educativas se
         LEFT JOIN municipios m ON se.municipio_id = m.id
         LEFT JOIN instituciones ie ON se.institucion_id = ie.id
-        LEFT JOIN visitas_programadas vp ON se.id = vp.sede_id
+        LEFT JOIN visitas_asignadas vp ON se.id = vp.sede_id
         LEFT JOIN visitas_completas_pae vc ON se.id = vc.sede_id
         GROUP BY se.id, se.nombre_sede, se.dane, se.due, m.nombre, ie.nombre, se.lat, se.lon, se.principal
         ORDER BY m.nombre, se.nombre_sede
@@ -2096,7 +2096,7 @@ def _generar_reporte_usuarios(db, filtros, formato, timestamp, export_dir, admin
             COUNT(vc.id) as visitas_pae_realizadas
         FROM usuarios u
         LEFT JOIN roles r ON u.rol_id = r.id
-        LEFT JOIN visitas_programadas vp ON u.id = vp.visitador_id
+        LEFT JOIN visitas_asignadas vp ON u.id = vp.visitador_id
         LEFT JOIN visitas_completas_pae vc ON u.id = vc.profesional_id
         GROUP BY u.id, u.nombre, u.correo, r.nombre
         ORDER BY r.nombre, u.nombre
@@ -2550,7 +2550,7 @@ def obtener_kpis_avanzados(
         
         # 1. Visitas programadas vs completadas
         visitas_programadas = db.execute(text("""
-            SELECT COUNT(*) FROM visitas_programadas 
+            SELECT COUNT(*) FROM visitas_asignadas 
             WHERE fecha_programada >= :inicio AND fecha_programada <= :fin
         """), {"inicio": fecha_inicio, "fin": fecha_fin}).scalar()
         
@@ -2561,7 +2561,7 @@ def obtener_kpis_avanzados(
         
         # Datos del período anterior para comparación
         visitas_programadas_anterior = db.execute(text("""
-            SELECT COUNT(*) FROM visitas_programadas 
+            SELECT COUNT(*) FROM visitas_asignadas 
             WHERE fecha_programada >= :inicio AND fecha_programada < :fin
         """), {"inicio": fecha_comparacion, "fin": fecha_inicio}).scalar()
         
@@ -2576,23 +2576,23 @@ def obtener_kpis_avanzados(
         
         # 3. Sedes activas
         sedes_activas = db.execute(text("""
-            SELECT COUNT(DISTINCT sede_id) FROM visitas_programadas 
+            SELECT COUNT(DISTINCT sede_id) FROM visitas_asignadas 
             WHERE fecha_programada >= :inicio AND fecha_programada <= :fin
         """), {"inicio": fecha_inicio, "fin": fecha_fin}).scalar()
         
         sedes_activas_anterior = db.execute(text("""
-            SELECT COUNT(DISTINCT sede_id) FROM visitas_programadas 
+            SELECT COUNT(DISTINCT sede_id) FROM visitas_asignadas 
             WHERE fecha_programada >= :inicio AND fecha_programada < :fin
         """), {"inicio": fecha_comparacion, "fin": fecha_inicio}).scalar()
         
         # 4. Visitadores activos
         visitadores_activos = db.execute(text("""
-            SELECT COUNT(DISTINCT visitador_id) FROM visitas_programadas 
+            SELECT COUNT(DISTINCT visitador_id) FROM visitas_asignadas 
             WHERE fecha_programada >= :inicio AND fecha_programada <= :fin
         """), {"inicio": fecha_inicio, "fin": fecha_fin}).scalar()
         
         visitadores_activos_anterior = db.execute(text("""
-            SELECT COUNT(DISTINCT visitador_id) FROM visitas_programadas 
+            SELECT COUNT(DISTINCT visitador_id) FROM visitas_asignadas 
             WHERE fecha_programada >= :inicio AND fecha_programada < :fin
         """), {"inicio": fecha_comparacion, "fin": fecha_inicio}).scalar()
         
@@ -2681,7 +2681,7 @@ def obtener_rendimiento_visitadores(
                     ELSE CAST(COUNT(vc.id) * 100.0 / COUNT(vp.id) AS DECIMAL(5,1))
                 END as tasa_cumplimiento
             FROM usuarios u
-            LEFT JOIN visitas_programadas vp ON u.id = vp.visitador_id 
+            LEFT JOIN visitas_asignadas vp ON u.id = vp.visitador_id 
                 AND vp.fecha_programada >= :fecha_inicio
             LEFT JOIN visitas_completas_pae vc ON vp.sede_id = vc.sede_id 
                 AND vc.profesional_id = u.id 
@@ -2737,7 +2737,7 @@ def obtener_distribucion_geografica(
                 COUNT(vc.id) as visitas_completadas
             FROM municipios m
             LEFT JOIN sedes_educativas se ON m.id = se.municipio_id
-            LEFT JOIN visitas_programadas vp ON se.id = vp.sede_id 
+            LEFT JOIN visitas_asignadas vp ON se.id = vp.sede_id 
                 AND vp.fecha_programada >= :fecha_inicio
             LEFT JOIN visitas_completas_pae vc ON se.id = vc.sede_id 
                 AND vc.fecha_visita >= :fecha_inicio
@@ -2792,7 +2792,7 @@ def obtener_alertas_criticas(
         
         # 1. Visitas vencidas
         visitas_vencidas = db.execute(text("""
-            SELECT COUNT(*) FROM visitas_programadas 
+            SELECT COUNT(*) FROM visitas_asignadas 
             WHERE fecha_programada < NOW() AND estado != 'completada'
         """)).scalar()
         
@@ -2812,7 +2812,7 @@ def obtener_alertas_criticas(
             SELECT COUNT(*) FROM usuarios u
             WHERE u.rol_id = 1 
             AND u.id NOT IN (
-                SELECT DISTINCT visitador_id FROM visitas_programadas 
+                SELECT DISTINCT visitador_id FROM visitas_asignadas 
                 WHERE fecha_programada >= :fecha_limite
             )
         """), {"fecha_limite": fecha_limite}).scalar()
@@ -2834,7 +2834,7 @@ def obtener_alertas_criticas(
                     WHEN COUNT(vp.id) = 0 THEN 0 
                     ELSE CAST(COUNT(vc.id) * 100.0 / COUNT(vp.id) AS DECIMAL(5,1))
                 END
-            FROM visitas_programadas vp
+            FROM visitas_asignadas vp
             LEFT JOIN visitas_completas_pae vc ON vp.sede_id = vc.sede_id
             WHERE vp.fecha_programada >= NOW() - INTERVAL '30 days'
         """)).scalar()
@@ -2853,7 +2853,7 @@ def obtener_alertas_criticas(
         sedes_sin_visitas = db.execute(text("""
             SELECT COUNT(*) FROM sedes_educativas se
             WHERE se.id NOT IN (
-                SELECT DISTINCT sede_id FROM visitas_programadas 
+                SELECT DISTINCT sede_id FROM visitas_asignadas 
                 WHERE fecha_programada >= NOW() - INTERVAL '60 days'
             )
         """)).scalar()
@@ -3423,7 +3423,7 @@ def procesar_notificaciones_automaticas(
         
         # 1. Verificar visitas vencidas
         visitas_vencidas = db.execute(text("""
-            SELECT COUNT(*) FROM visitas_programadas 
+            SELECT COUNT(*) FROM visitas_asignadas 
             WHERE fecha_programada < NOW() - INTERVAL '1 day' 
             AND estado != 'completada'
         """)).scalar()
@@ -3441,10 +3441,10 @@ def procesar_notificaciones_automaticas(
         
         # 2. Recordatorios de visitas próximas (24h)
         visitas_manana = db.execute(text("""
-            SELECT COUNT(*) FROM visitas_programadas 
+            SELECT COUNT(*) FROM visitas_asignadas 
             WHERE fecha_programada BETWEEN NOW() + INTERVAL '20 hours' 
             AND NOW() + INTERVAL '28 hours'
-            AND estado = 'programada'
+            AND estado = 'pendiente'
         """)).scalar()
         
         if visitas_manana > 0:
@@ -3595,7 +3595,7 @@ def obtener_usuario_detalle(
         if usuario.rol_id == 1:  # Visitador
             estadisticas = {
                 "visitas_totales": db.execute(text("""
-                    SELECT COUNT(*) FROM visitas_programadas WHERE visitador_id = :usuario_id
+                    SELECT COUNT(*) FROM visitas_asignadas WHERE visitador_id = :usuario_id
                 """), {"usuario_id": usuario_id}).scalar() or 0,
                 
                 "visitas_completadas": db.execute(text("""
@@ -3603,8 +3603,8 @@ def obtener_usuario_detalle(
                 """), {"usuario_id": usuario_id}).scalar() or 0,
                 
                 "visitas_pendientes": db.execute(text("""
-                    SELECT COUNT(*) FROM visitas_programadas 
-                    WHERE visitador_id = :usuario_id AND estado = 'programada'
+                    SELECT COUNT(*) FROM visitas_asignadas 
+                    WHERE visitador_id = :usuario_id AND estado = 'pendiente'
                 """), {"usuario_id": usuario_id}).scalar() or 0,
                 
                 "ultimo_reporte": db.execute(text("""
@@ -3717,7 +3717,7 @@ def eliminar_usuario(
         
         # Verificar si tiene visitas asociadas
         visitas_count = db.execute(text("""
-            SELECT COUNT(*) FROM visitas_programadas WHERE visitador_id = :usuario_id
+            SELECT COUNT(*) FROM visitas_asignadas WHERE visitador_id = :usuario_id
         """), {"usuario_id": usuario_id}).scalar() or 0
         
         if visitas_count > 0:
