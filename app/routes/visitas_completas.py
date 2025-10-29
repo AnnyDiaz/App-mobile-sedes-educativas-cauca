@@ -532,14 +532,21 @@ def generar_excel_visita_completa(
     try:
         # Cargar la plantilla Excel
         plantilla_path = os.path.join("app", "templates", "plantilla_historial_visitas_checklist.xlsx")
+        print(f"🔍 Intentando cargar plantilla desde: {plantilla_path}")
+        print(f"🔍 Ruta absoluta: {os.path.abspath(plantilla_path)}")
+        print(f"🔍 Existe archivo: {os.path.exists(plantilla_path)}")
+        
         if not os.path.exists(plantilla_path):
+            print(f"❌ Plantilla no encontrada en: {plantilla_path}")
             raise HTTPException(
                 status_code=500,
-                detail="Plantilla Excel no encontrada. Contacte al administrador."
+                detail=f"Plantilla Excel no encontrada en {plantilla_path}. Contacte al administrador."
             )
         
         # Cargar el workbook de la plantilla
+        print(f"✅ Cargando workbook desde: {plantilla_path}")
         workbook = load_workbook(plantilla_path)
+        print(f"✅ Workbook cargado exitosamente")
         
         # Obtener la hoja principal (asumiendo que es la primera)
         worksheet = workbook.active
@@ -549,6 +556,11 @@ def generar_excel_visita_completa(
         # Vamos a llenar los datos de la visita en la fila 2
         
         # Información de la visita (fila 2)
+        print(f"📋 Llenando información de visita ID {visita.id}")
+        print(f"   - Sede: {visita.sede.nombre_sede if visita.sede else 'N/A'}")
+        print(f"   - Municipio: {visita.municipio.nombre if visita.municipio else 'N/A'}")
+        print(f"   - Institucion: {visita.institucion.nombre if visita.institucion else 'N/A'}")
+        
         worksheet['A2'] = visita.id
         worksheet['B2'] = visita.fecha_visita.strftime('%Y-%m-%d %H:%M') if visita.fecha_visita else 'N/A'
         worksheet['C2'] = visita.contrato or 'N/A'
@@ -556,11 +568,19 @@ def generar_excel_visita_completa(
         worksheet['E2'] = visita.caso_atencion_prioritaria or 'N/A'
         worksheet['F2'] = visita.municipio.nombre if visita.municipio else 'N/A'
         worksheet['G2'] = visita.institucion.nombre if visita.institucion else 'N/A'
-        worksheet['H2'] = visita.sede.nombre_sede if visita.sede else 'N/A'  # Usar nombre_sede en lugar de nombre
+        
+        # Verificar que la sede existe antes de acceder a nombre_sede
+        if visita.sede:
+            worksheet['H2'] = visita.sede.nombre_sede if hasattr(visita.sede, 'nombre_sede') else 'N/A'
+        else:
+            worksheet['H2'] = 'N/A'
+            
         worksheet['I2'] = visita.profesional.nombre if visita.profesional else 'N/A'
+        print(f"✅ Información básica de visita llenada")
         
         # Llenar las respuestas del checklist
         # Comenzar desde la fila 3 (después de los encabezados)
+        print(f"📋 Procesando {len(respuestas)} respuestas del checklist")
         fila_actual = 3
         for respuesta in respuestas:
             item = db.query(models.ChecklistItem).filter(
@@ -580,7 +600,13 @@ def generar_excel_visita_completa(
                 worksheet[f'E{fila_actual}'] = visita.caso_atencion_prioritaria or 'N/A'  # Caso Prioritario
                 worksheet[f'F{fila_actual}'] = visita.municipio.nombre if visita.municipio else 'N/A'  # Municipio
                 worksheet[f'G{fila_actual}'] = visita.institucion.nombre if visita.institucion else 'N/A'  # Institución
-                worksheet[f'H{fila_actual}'] = visita.sede.nombre_sede if visita.sede else 'N/A'  # Sede
+                
+                # Verificar que la sede existe antes de acceder a nombre_sede
+                if visita.sede:
+                    worksheet[f'H{fila_actual}'] = visita.sede.nombre_sede if hasattr(visita.sede, 'nombre_sede') else 'N/A'
+                else:
+                    worksheet[f'H{fila_actual}'] = 'N/A'
+                    
                 worksheet[f'I{fila_actual}'] = visita.profesional.nombre if visita.profesional else 'N/A'  # Profesional
                 worksheet[f'J{fila_actual}'] = item.id  # Nº Ítem
                 worksheet[f'K{fila_actual}'] = item.pregunta_texto  # Pregunta / Descripción
@@ -591,9 +617,17 @@ def generar_excel_visita_completa(
                 fila_actual += 1
         
         # Guardar el archivo modificado en memoria
+        print(f"💾 Guardando archivo Excel en memoria...")
         output = BytesIO()
-        workbook.save(output)
-        output.seek(0)
+        try:
+            workbook.save(output)
+            output.seek(0)
+            print(f"✅ Excel generado exitosamente. Tamaño: {len(output.getvalue())} bytes")
+        except Exception as save_error:
+            print(f"❌ Error al guardar workbook: {str(save_error)}")
+            import traceback
+            print(traceback.format_exc())
+            raise
         
         return StreamingResponse(
             output,

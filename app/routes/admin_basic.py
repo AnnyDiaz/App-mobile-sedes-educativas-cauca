@@ -1087,29 +1087,38 @@ def programar_visitas_masivo(
                 dia_asignado = (i * dias_total) // len(sedes)
                 fecha_visita = fecha_inicio + timedelta(days=dia_asignado)
                 
-                # Verificar conflictos en la fecha específica
+                # Verificar conflictos en la fecha específica (buscar en visitas_asignadas)
                 conflicto = db.execute(text("""
-                    SELECT id FROM visitas_programadas 
-                    WHERE sede_id = :sede_id AND DATE(fecha_programada) = DATE(:fecha_programada)
-                """), {"sede_id": sede.id, "fecha_programada": fecha_visita}).fetchone()
+                    SELECT id FROM visitas_asignadas 
+                    WHERE sede_id = :sede_id 
+                    AND visitador_id = :visitador_id
+                    AND DATE(fecha_programada) = DATE(:fecha_programada)
+                """), {
+                    "sede_id": sede.id, 
+                    "visitador_id": visitador.id,
+                    "fecha_programada": fecha_visita
+                }).fetchone()
                 
                 if not conflicto:
-                    # Insertar usando SQL directo para evitar problemas de modelo
-                    db.execute(text("""
-                        INSERT INTO visitas_programadas 
-                        (sede_id, visitador_id, municipio_id, institucion_id, fecha_programada, contrato, operador, estado, observaciones)
-                        VALUES (:sede_id, :visitador_id, :municipio_id, :institucion_id, :fecha_programada, :contrato, :operador, :estado, :observaciones)
-                    """), {
-                        "sede_id": sede.id,
-                        "visitador_id": visitador.id,
-                        "municipio_id": sede.municipio_id,
-                        "institucion_id": sede.institucion_id,
-                        "fecha_programada": fecha_visita,
-                        "contrato": "ADMIN_MASIVO",
-                        "operador": f"Admin-{admin_user.id}",
-                        "estado": "programada",
-                        "observaciones": f"Visita {tipo_visita} programada masivamente"
-                    })
+                    # Crear visita asignada (no visita programada)
+                    from app.models import VisitaAsignada
+                    nueva_visita_asignada = VisitaAsignada(
+                        sede_id=sede.id,
+                        visitador_id=visitador.id,
+                        supervisor_id=admin_user.id,
+                        fecha_programada=fecha_visita,
+                        tipo_visita=tipo_visita,
+                        prioridad="normal",
+                        estado="pendiente",
+                        contrato="ADMIN_MASIVO",
+                        operador=f"Admin-{admin_user.id}",
+                        municipio_id=sede.municipio_id,
+                        institucion_id=sede.institucion_id,
+                        observaciones=f"Visita {tipo_visita} programada masivamente",
+                        fecha_creacion=datetime.utcnow()
+                    )
+                    
+                    db.add(nueva_visita_asignada)
                     
                     visitas_creadas.append({
                         "sede_nombre": sede.nombre_sede,
@@ -1118,12 +1127,25 @@ def programar_visitas_masivo(
                         "tipo": tipo_visita
                     })
                 else:
-                    errores.append(f"La sede {sede.nombre_sede} ya tiene una visita programada para {fecha_visita.strftime('%Y-%m-%d')}")
+                    errores.append(f"El visitador {visitador.nombre} ya tiene una visita asignada en {sede.nombre_sede} para {fecha_visita.strftime('%Y-%m-%d')}")
             
             except Exception as e:
+                import traceback
+                error_detail = traceback.format_exc()
+                print(f"❌ Error al crear visita asignada para sede {sede.nombre_sede}: {str(e)}")
+                print(f"❌ Traceback completo:\n{error_detail}")
                 errores.append(f"Error con sede {sede.nombre_sede}: {str(e)}")
         
-        db.commit()
+        try:
+            db.commit()
+            print(f"✅ Se crearon {len(visitas_creadas)} visitas asignadas exitosamente")
+        except Exception as e:
+            db.rollback()
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"❌ Error al hacer commit: {str(e)}")
+            print(f"❌ Traceback completo:\n{error_detail}")
+            raise HTTPException(status_code=500, detail=f"Error al guardar visitas: {str(e)}")
         
         return {
             "success": True,
