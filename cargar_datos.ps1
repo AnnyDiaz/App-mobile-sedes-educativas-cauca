@@ -20,15 +20,11 @@ docker cp insert_datos_normalizados.sql visitas_db:/tmp/insert_datos_normalizado
 docker exec -i visitas_db psql -U $DB_USER -d visitas_cauca -f /tmp/insert_datos_normalizados.sql
 
 Write-Host ""
-Write-Host "🔹 PASO 3: Verificando carga..." -ForegroundColor Yellow
-docker exec -i visitas_db psql -U $DB_USER -d visitas_cauca -c "
-SELECT 
-    (SELECT COUNT(*) FROM municipios) as municipios,
-    (SELECT COUNT(*) FROM instituciones) as instituciones,
-    (SELECT COUNT(*) FROM sedes_educativas) as sedes;
-"
+Write-Host "PASO 3: Verificando carga..." -ForegroundColor Yellow
+$query = "SELECT (SELECT COUNT(*) FROM municipios) as municipios, (SELECT COUNT(*) FROM instituciones) as instituciones, (SELECT COUNT(*) FROM sedes_educativas) as sedes;"
+docker exec -i visitas_db psql -U $DB_USER -d visitas_cauca -c $query
 
 Write-Host ""
-Write-Host "✅ ¡Datos normalizados cargados exitosamente!" -ForegroundColor Green
+Write-Host "Datos normalizados cargados exitosamente!" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Cyan
 

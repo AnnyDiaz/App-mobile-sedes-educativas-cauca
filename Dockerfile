@@ -21,6 +21,9 @@ ENV LANG=en_US.UTF-8 \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copiar archivos SQL necesarios para inicialización
+COPY insert_checklist_items.sql /app/
+
 COPY . .
 
 # Create media and exports dirs used by the app

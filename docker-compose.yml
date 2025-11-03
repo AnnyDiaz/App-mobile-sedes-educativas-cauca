@@ -1,7 +1,10 @@
+version: "3.9"
+
 services:
   db:
     image: postgres:15-alpine
     container_name: visitas_db
+    restart: always
     environment:
       POSTGRES_DB: visitas_cauca
       POSTGRES_USER: visitas
@@ -19,6 +22,7 @@ services:
   api:
     build: .
     container_name: visitas_api
+    restart: always
     depends_on:
       db:
         condition: service_healthy
@@ -31,13 +35,15 @@ services:
       EMAIL_PORT: 587
       EMAIL_USER: ${EMAIL_USER:-}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
-      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080,*,http://localhost:*,http://127.0.0.1:*
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080,http://localhost:*,http://127.0.0.1:*
     ports:
       - "8000:8000"
     volumes:
+      - .:/app        # <-- esto asegura que tu código local se monte dentro del contenedor
       - media_data:/app/media
-
+    # El comando está definido en el Dockerfile, no es necesario sobrescribirlo aquí
+    # command: 
+    #   uvicorn main:app --host 0.0.0.0 --port 8000
 volumes:
   db_data:
   media_data:
-
