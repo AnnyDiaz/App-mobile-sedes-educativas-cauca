@@ -532,7 +532,9 @@ def generar_excel_visita_completa(
     
     try:
         # Crear un nuevo workbook de Excel desde cero
-        print(f"📝 Creando nuevo workbook Excel...")
+        print(f"📝 Creando nuevo workbook Excel para visita {visita_id}...")
+        print(f"📊 Total de respuestas: {len(respuestas)}")
+        
         workbook = Workbook()
         worksheet = workbook.active
         worksheet.title = "Visita Completa"
@@ -582,40 +584,73 @@ def generar_excel_visita_completa(
         # Llenar la información de la visita
         print(f"📋 Llenando información de visita ID {visita.id}")
         fila_actual = 2
-        for respuesta in respuestas:
-            item = db.query(models.ChecklistItem).filter(
-                models.ChecklistItem.id == respuesta.item_id
-            ).first()
+        
+        # Si no hay respuestas, crear una fila con información básica
+        if not respuestas:
+            print(f"⚠️ No hay respuestas para la visita {visita_id}. Generando Excel con información básica.")
+            data = [
+                visita.id,
+                visita.fecha_visita.strftime('%Y-%m-%d %H:%M') if visita.fecha_visita else 'N/A',
+                visita.contrato or 'N/A',
+                visita.operador or 'N/A',
+                visita.caso_atencion_prioritaria or 'N/A',
+                visita.municipio.nombre if visita.municipio else 'N/A',
+                visita.institucion.nombre if visita.institucion else 'N/A',
+                visita.sede.nombre_sede if visita.sede and hasattr(visita.sede, 'nombre_sede') else 'N/A',
+                visita.profesional.nombre if visita.profesional else 'N/A',
+                'N/A',
+                'No hay respuestas registradas',
+                'N/A',
+                'N/A',
+                'N/A'
+            ]
             
-            if item:
-                categoria = db.query(models.ChecklistCategoria).filter(
-                    models.ChecklistCategoria.id == item.categoria_id
-                ).first()
-                
-                # Llenar datos
-                data = [
-                    visita.id,
-                    visita.fecha_visita.strftime('%Y-%m-%d %H:%M') if visita.fecha_visita else 'N/A',
-                    visita.contrato or 'N/A',
-                    visita.operador or 'N/A',
-                    visita.caso_atencion_prioritaria or 'N/A',
-                    visita.municipio.nombre if visita.municipio else 'N/A',
-                    visita.institucion.nombre if visita.institucion else 'N/A',
-                    visita.sede.nombre_sede if visita.sede and hasattr(visita.sede, 'nombre_sede') else 'N/A',
-                    visita.profesional.nombre if visita.profesional else 'N/A',
-                    item.id,
-                    item.pregunta_texto,
-                    respuesta.respuesta,
-                    respuesta.observacion or 'N/A',
-                    'N/A'  # Evidencia
-                ]
-                
-                for col_idx, value in enumerate(data, start=1):
-                    cell = worksheet.cell(row=fila_actual, column=col_idx)
-                    cell.value = value
-                    cell.border = border
-                
-                fila_actual += 1
+            for col_idx, value in enumerate(data, start=1):
+                cell = worksheet.cell(row=fila_actual, column=col_idx)
+                cell.value = value
+                cell.border = border
+            
+            fila_actual += 1
+        else:
+            # Procesar cada respuesta
+            for respuesta in respuestas:
+                try:
+                    item = db.query(models.ChecklistItem).filter(
+                        models.ChecklistItem.id == respuesta.item_id
+                    ).first()
+                    
+                    if item:
+                        # Llenar datos
+                        data = [
+                            visita.id,
+                            visita.fecha_visita.strftime('%Y-%m-%d %H:%M') if visita.fecha_visita else 'N/A',
+                            visita.contrato or 'N/A',
+                            visita.operador or 'N/A',
+                            visita.caso_atencion_prioritaria or 'N/A',
+                            visita.municipio.nombre if visita.municipio else 'N/A',
+                            visita.institucion.nombre if visita.institucion else 'N/A',
+                            visita.sede.nombre_sede if visita.sede and hasattr(visita.sede, 'nombre_sede') else 'N/A',
+                            visita.profesional.nombre if visita.profesional else 'N/A',
+                            item.id,
+                            item.pregunta_texto or 'N/A',
+                            respuesta.respuesta or 'N/A',
+                            respuesta.observacion or 'N/A',
+                            'N/A'  # Evidencia
+                        ]
+                        
+                        for col_idx, value in enumerate(data, start=1):
+                            cell = worksheet.cell(row=fila_actual, column=col_idx)
+                            cell.value = value
+                            cell.border = border
+                        
+                        fila_actual += 1
+                    else:
+                        print(f"⚠️ Item con ID {respuesta.item_id} no encontrado")
+                except Exception as row_error:
+                    print(f"❌ Error al procesar respuesta {respuesta.id}: {str(row_error)}")
+                    import traceback
+                    print(traceback.format_exc())
+                    continue
         
         # Guardar el archivo modificado en memoria
         print(f"💾 Guardando archivo Excel en memoria...")

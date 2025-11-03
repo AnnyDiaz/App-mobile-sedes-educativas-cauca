@@ -509,9 +509,9 @@ class _CrearVisitaPAEScreenState extends State<CrearVisitaPAEScreen> {
                                         border: OutlineInputBorder(),
                                       ),
                                       items: [
-                                        '✅ Cumple',
-                                        '✔️ Cumple Parcialmente',
-                                        '❌ No Cumple',
+                                        'Cumple',
+                                        'Cumple Parcialmente',
+                                        'No Cumple',
                                         'N/A',
                                         'N/O',
                                       ].map((opcion) {

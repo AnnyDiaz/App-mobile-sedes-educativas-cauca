@@ -467,7 +467,17 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
                               Text('Guardando...'),
                             ],
                           )
-                        : Text(_currentStep == _buildSteps().length - 1 ? '🚀 GUARDAR CRONOGRAMA' : 'SIGUIENTE'),
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_currentStep == _buildSteps().length - 1)
+                                const Icon(Icons.save, size: 20)
+                              else
+                                const Icon(Icons.arrow_forward, size: 20),
+                              const SizedBox(width: 8),
+                              Text(_currentStep == _buildSteps().length - 1 ? 'GUARDAR CRONOGRAMA' : 'SIGUIENTE'),
+                            ],
+                          ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -490,43 +500,85 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
   List<Step> _buildSteps() {
     return [
       Step(
-        title: const Text('📋 Datos del Cronograma'),
+        title: Row(
+          children: const [
+            Icon(Icons.assignment, size: 20, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Datos del Cronograma'),
+          ],
+        ),
         content: _buildStep1(),
         isActive: _currentStep >= 0,
         state: _currentStep > 0 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('📍 Ubicación'),
+        title: Row(
+          children: const [
+            Icon(Icons.location_on, size: 20, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Ubicación'),
+          ],
+        ),
         content: _buildStep2(),
         isActive: _currentStep >= 1,
         state: _currentStep > 1 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('⚡ Caso de Atención Prioritaria'),
+        title: Row(
+          children: const [
+            Icon(Icons.priority_high, size: 20, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Caso de Atención Prioritaria'),
+          ],
+        ),
         content: _buildStep3(),
         isActive: _currentStep >= 2,
         state: _currentStep > 2 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('📝 Observaciones Generales'),
+        title: Row(
+          children: const [
+            Icon(Icons.note_alt, size: 20, color: Colors.grey),
+            SizedBox(width: 8),
+            Text('Observaciones Generales'),
+          ],
+        ),
         content: _buildStep4(),
         isActive: _currentStep >= 3,
         state: _currentStep > 3 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('✅ Checklist PAE'),
+        title: Row(
+          children: const [
+            Icon(Icons.checklist, size: 20, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Checklist PAE'),
+          ],
+        ),
         content: _buildStep5(),
         isActive: _currentStep >= 4,
         state: _currentStep > 4 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('✍️ Firma Digital'),
+        title: Row(
+          children: const [
+            Icon(Icons.draw, size: 20, color: Colors.purple),
+            SizedBox(width: 8),
+            Text('Firma Digital'),
+          ],
+        ),
         content: _buildStep6(),
         isActive: _currentStep >= 5,
         state: _currentStep > 5 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('🎯 Finalizar'),
+        title: Row(
+          children: const [
+            Icon(Icons.check_circle, size: 20, color: Colors.teal),
+            SizedBox(width: 8),
+            Text('Finalizar'),
+          ],
+        ),
         content: _buildStep7(),
         isActive: _currentStep >= 6,
       ),
@@ -1735,40 +1787,46 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '🎯 Resumen del Cronograma PAE',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Row(
+          children: const [
+            Icon(Icons.summarize, size: 24, color: Colors.teal),
+            SizedBox(width: 12),
+            Text(
+              'Resumen del Cronograma PAE',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         
-        _buildResumenItem('📅 Fecha', _fechaVisita != null 
+        _buildResumenItem('Fecha', _fechaVisita != null 
             ? DateFormat('dd/MM/yyyy').format(_fechaVisita!)
-            : 'No seleccionada'),
-        _buildResumenItem('🕐 Hora', _horaVisita != null 
+            : 'No seleccionada', icon: Icons.calendar_today, iconColor: Colors.blue),
+        _buildResumenItem('Hora', _horaVisita != null 
             ? '${_horaVisita!.hour.toString().padLeft(2, '0')}:${_horaVisita!.minute.toString().padLeft(2, '0')}'
-            : 'No seleccionada'),
-        _buildResumenItem('📍 GPS', _ubicacionGPS != null 
+            : 'No seleccionada', icon: Icons.access_time, iconColor: Colors.indigo),
+        _buildResumenItem('GPS', _ubicacionGPS != null 
             ? 'Capturado (${_ubicacionGPS!.latitude.toStringAsFixed(6)}, ${_ubicacionGPS!.longitude.toStringAsFixed(6)})'
-            : 'No capturado'),
-        _buildResumenItem('📋 Tipo', _tipoVisita),
-        _buildResumenItem('⚡ Prioridad', _prioridad),
-        _buildResumenItem('📝 Contrato', _contrato),
-        _buildResumenItem('👤 Operador', _operador),
-        _buildResumenItem('🏛️ Municipio', _municipioId != null ? 'ID: $_municipioId' : 'No seleccionado'),
-        _buildResumenItem('🏫 Institución', _institucionId != null ? 'ID: $_institucionId' : 'No seleccionada'),
-        _buildResumenItem('📍 Sede', _sedeId != null ? 'ID: $_sedeId' : 'No seleccionado'),
+            : 'No capturado', icon: Icons.location_on, iconColor: Colors.red),
+        _buildResumenItem('Tipo', _tipoVisita, icon: Icons.category, iconColor: Colors.blue),
+        _buildResumenItem('Prioridad', _prioridad, icon: Icons.priority_high, iconColor: Colors.orange),
+        _buildResumenItem('Contrato', _contrato, icon: Icons.description, iconColor: Colors.indigo),
+        _buildResumenItem('Operador', _operador, icon: Icons.person, iconColor: Colors.teal),
+        _buildResumenItem('Municipio', _municipioId != null ? 'ID: $_municipioId' : 'No seleccionado', icon: Icons.location_city, iconColor: Colors.red),
+        _buildResumenItem('Institución', _institucionId != null ? 'ID: $_institucionId' : 'No seleccionada', icon: Icons.school, iconColor: Colors.purple),
+        _buildResumenItem('Sede', _sedeId != null ? 'ID: $_sedeId' : 'No seleccionado', icon: Icons.business, iconColor: Colors.green),
         
         // Validación de IDs
         const SizedBox(height: 16),
         _buildValidacionIds(),
-        _buildResumenItem('🚨 Caso', _casoAtencionPrioritaria ?? 'No seleccionado'),
-        _buildResumenItem('📝 Observaciones', _observaciones.isNotEmpty ? _observaciones : 'Sin observaciones'),
-        _buildResumenItem('✅ Checklist', '${_respuestasChecklist.length} ítems evaluados'),
-        _buildResumenItem('🆔 IDs Checklist', _getIdsChecklistResumen()),
-        _buildResumenItem('📸 Evidencias', '${_evidenciasChecklist.values.fold(0, (sum, list) => sum + list.length)} archivos'),
-        _buildResumenItem('✍️ Firma Digital', _firmaUsuario != null ? 'Capturada' : 'No capturada'),
-        _buildResumenItem('📸 Imagen Adicional', _imagenAdicional != null ? 'Seleccionada' : 'No seleccionada'),
-        _buildResumenItem('👤 Profesional', _nombreUsuario.isNotEmpty ? _nombreUsuario : 'No especificado'),
+        _buildResumenItem('Caso', _casoAtencionPrioritaria ?? 'No seleccionado', icon: Icons.warning, iconColor: Colors.redAccent),
+        _buildResumenItem('Observaciones', _observaciones.isNotEmpty ? _observaciones : 'Sin observaciones', icon: Icons.note, iconColor: Colors.grey),
+        _buildResumenItem('Checklist', '${_respuestasChecklist.length} ítems evaluados', icon: Icons.checklist, iconColor: Colors.green),
+        _buildResumenItem('IDs Checklist', _getIdsChecklistResumen(), icon: Icons.format_list_numbered, iconColor: Colors.blueGrey),
+        _buildResumenItem('Evidencias', '${_evidenciasChecklist.values.fold(0, (sum, list) => sum + list.length)} archivos', icon: Icons.photo_library, iconColor: Colors.amber),
+        _buildResumenItem('Firma Digital', _firmaUsuario != null ? 'Capturada' : 'No capturada', icon: Icons.draw, iconColor: Colors.purple),
+        _buildResumenItem('Imagen Adicional', _imagenAdicional != null ? 'Seleccionada' : 'No seleccionada', icon: Icons.add_photo_alternate, iconColor: Colors.cyan),
+        _buildResumenItem('Profesional', _nombreUsuario.isNotEmpty ? _nombreUsuario : 'No especificado', icon: Icons.badge, iconColor: Colors.deepOrange),
         
         const SizedBox(height: 16),
         const Text(
@@ -1779,14 +1837,18 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
     );
   }
 
-  Widget _buildResumenItem(String titulo, String valor) {
+  Widget _buildResumenItem(String titulo, String valor, {IconData? icon, Color? iconColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (icon != null) ...[
+            Icon(icon, size: 18, color: iconColor ?? Colors.grey),
+            const SizedBox(width: 8),
+          ],
           SizedBox(
-            width: 120,
+            width: icon != null ? 100 : 120,
             child: Text(
               titulo,
               style: const TextStyle(fontWeight: FontWeight.bold),
@@ -2214,7 +2276,13 @@ class _CrearCronogramaScreenState extends State<CrearCronogramaScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('🚀 Cronograma PAE enviado al servidor con éxito.'),
+                content: Row(
+                  children: const [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Cronograma PAE enviado al servidor con éxito.'),
+                  ],
+                ),
                 backgroundColor: Colors.green,
                 duration: Duration(seconds: 2),
               ),
